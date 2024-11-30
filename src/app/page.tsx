@@ -21,12 +21,7 @@ export default function Chat() {
  const [messages, setMessages] = useState<Message[]>([
    {
      id: uuid(),
-     content: "Welcome to Travel Associates, where we curate extraordinary travel experiences for extraordinary travelers. I'm so glad you've reached out to us for your next luxurious adventure.",
-     role: "system",
-   },
-   {
-     id: uuid(),
-     content: "How can I assist you?",
+     content: "Welcome to Travel Associates. \n \nI'm here to craft your next remarkable journey. What inspires you?",
      role: "system",
    }
  ]);
