@@ -26,7 +26,7 @@ const ChatMessage = ({ role, content, isThinking = false }: Props) => {
             <img
               src="/images/ta-icon.png"
               alt="Travel Associates"
-              className="w-14 h-13"
+              className="w-8 h-8 mb-1"
             />
             <span className="sr-only">Travel Associates</span>
           </>

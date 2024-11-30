@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { v4 as uuid } from "uuid";
+import VideoBanner from "../components/VideoBanner";
 import ChatFooter from "../components/ChatFooter";
 import ChatBody from "../components/ChatBody";
 
@@ -109,22 +110,26 @@ export default function Chat() {
    }
  };
 
- return (
-   <main className="m-auto flex h-[100dvh] w-full max-w-screen-2xl flex-col bg-white dark:bg-zinc-900">
-     <div className="flex flex-1 overflow-hidden">
-       <div className="flex flex-1 flex-col overflow-auto">
-         <ChatBody messages={messages} isLoading={isLoading} />
-         
-         <ChatFooter
-           input={input}
-           onInputChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-           onSubmit={handleSubmit}
-           onSuggestionClick={(suggestion: string) => {
-             setInput(suggestion);
-           }}
-         />
-       </div>
-     </div>
-   </main>
- );
+ // Inside the Chat component render function
+return (
+  <main className="m-auto flex h-[100dvh] w-full max-w-screen-2xl flex-col bg-white dark:bg-zinc-900">
+    {/* Video Banner */}
+    <VideoBanner />
+    
+    <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-auto">
+        <ChatBody messages={messages} isLoading={isLoading} />
+        
+        <ChatFooter
+          input={input}
+          onInputChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
+          onSubmit={handleSubmit}
+          onSuggestionClick={(suggestion: string) => {
+            setInput(suggestion);
+          }}
+        />
+      </div>
+    </div>
+  </main>
+);
 }
