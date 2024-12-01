@@ -9,7 +9,7 @@ interface Props {
 const ChatMessage = ({ role, content, isThinking = false }: Props) => {
   const isUser = role === 'user';
   const backgroundColor = isUser
-    ? "bg-slate-200 dark:bg-slate-800"
+    ? "bg-purple-200 bg-opacity-75 dark:bg-purple-500 dark:bg-opacity-15"
     : "bg-zinc-100 dark:bg-zinc-800";
 
   return (
@@ -20,7 +20,7 @@ const ChatMessage = ({ role, content, isThinking = false }: Props) => {
     >
       <div className="text-sm text-zinc-400 flex items-center gap-2">
         {isUser ? (
-          "User"
+          "Traveler"
         ) : (
           <>
             <img

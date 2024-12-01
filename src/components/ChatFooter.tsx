@@ -25,7 +25,7 @@ const ChatFooter = ({
   return (
     <footer className="flex-shrink-0 space-y-4 border-t p-4 dark:border-zinc-800">
       <div>
-        <div className="mb-2 flex justify-between text-xs text-zinc-400">
+        <div className="mb-2 flex justify-between text-xs text-purple-400">
           <div>You may want to say...</div>
           <div
             className="-m-4 cursor-pointer p-4"

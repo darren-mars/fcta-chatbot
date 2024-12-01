@@ -10,9 +10,9 @@ const VideoBanner = () => {
         loop
         muted
         playsInline
-        className="w-full h-[30vh] object-cover scale-74" // Adjust the scale to zoom out
+        className="w-full h-[10vh] object-cover scale-74"
       >
-        <source src="/videos/banner.mp4" type="video/mp4" />
+        <source src="/videos/chat-banner.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 

@@ -22,7 +22,7 @@ export default function Chat() {
  const [messages, setMessages] = useState<Message[]>([
    {
      id: uuid(),
-     content: "Welcome to Travel Associates. \n \nI'm here to craft your next remarkable journey. What inspires you?",
+     content: "Welcome to Travel Associates. \nI'm here to craft your next remarkable journey. \n\nWhat inspires you?",
      role: "system",
    }
  ]);
