@@ -1,135 +1,42 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { v4 as uuid } from "uuid";
-import VideoBanner from "../components/VideoBanner";
-import ChatFooter from "../components/ChatFooter";
-import ChatBody from "../components/ChatBody";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-interface Message {
- id: string;
- content: string;
- role: 'system' | 'user' | 'assistant';
-}
+export default function LandingPage() {
+  const router = useRouter();
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-interface WebSocketMessage {
- chunk?: string;
- end?: boolean;
- data?: string;
-}
-
-export default function Chat() {
- const [messages, setMessages] = useState<Message[]>([
-   {
-     id: uuid(),
-     content: "Welcome to Travel Associates. \nI'm here to craft your next remarkable journey. \n\nWhat inspires you?",
-     role: "system",
-   }
- ]);
- const [input, setInput] = useState("");
- const [isLoading, setIsLoading] = useState(false);
- const ws = useRef<WebSocket | null>(null);
-
- useEffect(() => {
-   // Initialize WebSocket connection
-   ws.current = new WebSocket('wss://uhueud8q45.execute-api.us-east-2.amazonaws.com/dev');
-   
-   ws.current.onmessage = (event: MessageEvent) => {
-    const data = JSON.parse(event.data) as WebSocketMessage;
-    const chunk = data.chunk;
-    
-    if (chunk && typeof chunk === 'string') {  // Type guard to ensure chunk is string
-      setMessages(prevMessages => {
-        const lastMessage = prevMessages[prevMessages.length - 1];
-        
-        if (lastMessage && lastMessage.role === 'assistant') {
-          return prevMessages.map((msg, index) => {
-            if (index === prevMessages.length - 1) {
-              return {
-                ...msg,
-                content: msg.content + chunk
-              };
-            }
-            return msg;
-          });
-        } 
-        
-        const newMessage: Message = {
-          id: uuid(),
-          content: chunk,
-          role: 'assistant'
-        };
-        
-        return [...prevMessages, newMessage];
-      });
-    }
-    
-    if (data.end) {
-      setIsLoading(false);
-    }
+  const handleStart = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      router.push('/chat');
+    }, 2000);
   };
 
-   ws.current.onerror = (error: Event) => {
-     console.error('WebSocket error:', error);
-     setIsLoading(false);
-   };
+  return (
+    <div className={`relative min-h-screen overflow-hidden transition-all duration-[2000ms] ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover"
+      >
+        <source src="/videos/landing.mp4" type="video/mp4" />
+      </video>
 
-   ws.current.onclose = () => {
-     console.log('WebSocket connection closed');
-     setIsLoading(false);
-   };
-
-   return () => {
-     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-       ws.current.close();
-     }
-   };
- }, []);
-
- const handleSubmit = async (e: React.FormEvent) => {
-   e.preventDefault();
-   if (!input.trim() || isLoading || !ws.current) return;
-
-   setIsLoading(true);
-   setMessages(prev => [...prev, {
-     id: uuid(),
-     content: input,
-     role: 'user'
-   }]);
-
-   try {
-     ws.current.send(JSON.stringify({
-       action: "sendMessage",
-       question: input,
-     }));
-
-     setInput("");
-   } catch (error) {
-     console.error('Error sending message:', error);
-     setIsLoading(false);
-   }
- };
-
- // Inside the Chat component render function
-return (
-  <main className="m-auto flex h-[100dvh] w-full max-w-screen-2xl flex-col bg-white dark:bg-zinc-900">
-    {/* Video Banner */}
-    <VideoBanner />
-    
-    <div className="flex flex-1 overflow-hidden">
-      <div className="flex flex-1 flex-col overflow-auto">
-        <ChatBody messages={messages} isLoading={isLoading} />
-        
-        <ChatFooter
-          input={input}
-          onInputChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-          onSubmit={handleSubmit}
-          onSuggestionClick={(suggestion: string) => {
-            setInput(suggestion);
-          }}
-        />
+      <div className="relative z-20 flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-8 mt-96">
+          <button
+            onClick={handleStart}
+            className="px-8 py-3 bg-violet-100/20 backdrop-blur-sm text-white rounded-3xl hover:bg-violet-500/40 transition-colors tracking-wider text-2xl"
+            style={{ fontFamily: 'TrajanPro, serif' }}
+          >
+            Start your journey
+          </button>
+        </div>
       </div>
     </div>
-  </main>
-);
+  );
 }

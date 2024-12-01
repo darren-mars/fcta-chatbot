@@ -19,3 +19,11 @@
 body {
   color: rgb(var(--foreground-rgb));
 }
+
+
+@font-face {
+  font-family: 'TrajanPro';
+  src: url('/fonts/TrajanPro-Regular.ttf') format('truetype');
+  font-weight: lighter;
+  font-style: lighter;
+}

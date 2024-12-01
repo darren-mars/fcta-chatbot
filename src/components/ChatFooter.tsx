@@ -1,3 +1,4 @@
+// ChatFooter.tsx
 import { ChangeEvent, FormEvent, useState } from "react";
 import Button from "./Button";
 
@@ -5,7 +6,7 @@ interface Props {
   input: string;
   onInputChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onSuggestionClick: (suggestion: string) => void;
+  onSuggestionSubmit: (suggestion: string) => void; // Changed from onSuggestionClick
 }
 
 const SUGGESTIONS = [
@@ -18,7 +19,7 @@ const ChatFooter = ({
   input,
   onInputChange,
   onSubmit,
-  onSuggestionClick,
+  onSuggestionSubmit, // Changed prop name
 }: Props) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -40,7 +41,7 @@ const ChatFooter = ({
               <Button
                 key={suggestion}
                 className="mb-2 ml-2 whitespace-nowrap text-sm"
-                onClick={() => onSuggestionClick(suggestion)}
+                onClick={() => onSuggestionSubmit(suggestion)} // Changed to use new prop
               >
                 {suggestion}
               </Button>
