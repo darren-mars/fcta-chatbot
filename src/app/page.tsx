@@ -27,13 +27,20 @@ export default function LandingPage() {
       </video>
 
       <div className="relative z-20 flex h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-8 mt-96">
+        <div className="flex flex-col items-center gap-7 mt-80 text-sm text-center">
+          <p
+            className="text-white text-sm"
+            // style={{ fontFamily: 'TrajanPro, serif' }}
+          >
+          Your journey to unparalleled luxury starts here.
+          {/* <br /> */}
+          </p>
           <button
             onClick={handleStart}
-            className="px-8 py-3 bg-violet-100/20 backdrop-blur-sm text-white rounded-3xl hover:bg-violet-500/40 transition-colors tracking-wider text-2xl"
+            className="px-5 py-1 bg-violet-100/20 backdrop-blur-sm text-white rounded-3xl hover:bg-violet-500/40 transition-colors tracking-wider text-xl"
             style={{ fontFamily: 'TrajanPro, serif' }}
           >
-            Start your journey
+          Begin
           </button>
         </div>
       </div>
