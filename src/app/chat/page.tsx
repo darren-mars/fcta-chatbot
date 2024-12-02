@@ -139,7 +139,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className={`flex flex-col h-[100dvh] transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`flex flex-col h-[100dvh] transition-opacity duration-500 dark:bg-zinc-900 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <div className="w-full">
         <VideoBanner />
       </div>
