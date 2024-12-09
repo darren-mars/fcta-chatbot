@@ -10,6 +10,7 @@ interface Message {
   id: string;
   content: string;
   role: 'system' | 'user' | 'assistant';
+  options?: string[];
 }
 
 export default function ChatPage() {
@@ -45,9 +46,8 @@ export default function ChatPage() {
     
     ws.current.onmessage = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
-      const chunk = data.chunk;
       
-      if (chunk && typeof chunk === 'string') {
+      if (data.chunk || data.options) {
         setMessages(prevMessages => {
           const lastMessage = prevMessages[prevMessages.length - 1];
           
@@ -56,7 +56,8 @@ export default function ChatPage() {
               if (index === prevMessages.length - 1) {
                 return {
                   ...msg,
-                  content: msg.content + chunk
+                  content: data.chunk ? msg.content + data.chunk : msg.content,
+                  options: data.options || msg.options
                 };
               }
               return msg;
@@ -65,7 +66,8 @@ export default function ChatPage() {
           
           return [...prevMessages, {
             id: uuid(),
-            content: chunk,
+            content: data.chunk || "",
+            options: data.options,
             role: 'assistant'
           }];
         });
@@ -119,7 +121,7 @@ export default function ChatPage() {
 
   const handleSubmitSuggestion = (suggestion: string) => {
     if (isLoading || !ws.current) return;
-
+    
     setIsLoading(true);
     setMessages(prev => [...prev, {
       id: uuid(),
@@ -146,7 +148,11 @@ export default function ChatPage() {
       
       <div className="flex-1 overflow-y-auto">
         <div ref={chatBodyRef} className="px-4 pb-4">
-          <ChatBody messages={messages} isLoading={isLoading} />
+        <ChatBody 
+          messages={messages} 
+          isLoading={isLoading}
+          onSuggestionSubmit={handleSubmitSuggestion}  // Changed to match ChatBody Props
+        />
         </div>
       </div>
         

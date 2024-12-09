@@ -1,13 +1,21 @@
-import { Message } from "ai";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
+import { AppleCardsCarousel } from "./AppleCardsCarousel";
+
+interface Message {
+  id: string;
+  content: string;
+  role: 'system' | 'user' | 'assistant';
+  options?: string[];
+}
 
 interface Props {
   messages: Message[];
   isLoading: boolean;
+  onSuggestionSubmit: (suggestion: string) => void;
 }
 
-const ChatBody = ({ messages, isLoading }: Props) => {
+const ChatBody = ({ messages, isLoading, onSuggestionSubmit }: Props) => {
   const messageListContainerRef = useRef<HTMLDivElement | null>(null);
   const isAtBottom = useRef(true);
 
@@ -39,14 +47,21 @@ const ChatBody = ({ messages, isLoading }: Props) => {
     >
       <div className="p-4">
         {messages.map((message, index) => (
-          <ChatMessage
-            key={message.id}
-            role={message.role}
-            content={message.content}
-            isThinking={
-              !isGettingResponse && isLoading && index === messages.length - 1
-            }
-          />
+          <div key={message.id}>
+            <ChatMessage
+              role={message.role}
+              content={message.content}
+              isThinking={
+                !isGettingResponse && isLoading && index === messages.length - 1
+              }
+            />
+            {message.role === 'assistant' && message.options && message.options.length > 0 && (
+              <AppleCardsCarousel
+                items={message.options}
+                onSelect={onSuggestionSubmit}
+              />
+            )}
+          </div>
         ))}
         {isGettingResponse && (
           <ChatMessage role="system" content="" isThinking />

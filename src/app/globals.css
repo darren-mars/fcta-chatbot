@@ -27,3 +27,12 @@ body {
   font-weight: lighter;
   font-style: lighter;
 }
+
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
