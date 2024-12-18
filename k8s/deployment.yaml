@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fcta-chatbot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fcta-chatbot
+  template:
+    metadata:
+      labels:
+        app: fcta-chatbot
+    spec:
+      containers:
+      - name: fcta-chatbot
+        image: fctachatbotregistry.azurecr.io/fcta-chatbot:v1
+        ports:
+        - containerPort: 8000
+        env:
+        - name: AZURE_OPENAI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-secrets
+              key: openai-key
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: azure-secrets
+              key: openai-endpoint

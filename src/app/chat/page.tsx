@@ -10,13 +10,21 @@ interface Message {
   id: string;
   content: string;
   role: 'system' | 'user' | 'assistant';
+  options?: string[];
 }
+
+// Helper function to format text with line breaks
+const formatMessageContent = (content: string) => {
+  return content.split('\n').map((text, index) => (
+    text ? <p key={index} className="mb-4">{text}</p> : <br key={index} />
+  ));
+};
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: uuid(),
-      content: "Welcome to Travel Associates. \n \nI'm here to craft your next remarkable journey. What inspires you?",
+      content: "Welcome to Travel Associates.\n\nI'm here to craft your next remarkable journey. What inspires you?",
       role: "system",
     }
   ]);
@@ -45,29 +53,29 @@ export default function ChatPage() {
     
     ws.current.onmessage = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
-      const chunk = data.chunk;
       
-      if (chunk && typeof chunk === 'string') {
+      if (data.chunk || data.options) {
         setMessages(prevMessages => {
           const lastMessage = prevMessages[prevMessages.length - 1];
           
-          if (lastMessage && lastMessage.role === 'assistant') {
-            return prevMessages.map((msg, index) => {
-              if (index === prevMessages.length - 1) {
-                return {
-                  ...msg,
-                  content: msg.content + chunk
-                };
-              }
-              return msg;
-            });
+          if (!lastMessage || lastMessage.role !== 'assistant') {
+            return [...prevMessages, {
+              id: uuid(),
+              content: data.chunk || "",
+              options: data.options || [],
+              role: 'assistant'
+            }];
           }
           
-          return [...prevMessages, {
-            id: uuid(),
-            content: chunk,
-            role: 'assistant'
-          }];
+          // Create a new message object to ensure React detects the change
+          const updatedMessage = {
+            ...lastMessage,
+            content: lastMessage.content + (data.chunk || ""),
+            options: data.options || lastMessage.options
+          };
+          
+          // Return new array with the updated message
+          return [...prevMessages.slice(0, -1), updatedMessage];
         });
       }
       
@@ -119,7 +127,7 @@ export default function ChatPage() {
 
   const handleSubmitSuggestion = (suggestion: string) => {
     if (isLoading || !ws.current) return;
-
+    
     setIsLoading(true);
     setMessages(prev => [...prev, {
       id: uuid(),
@@ -146,7 +154,11 @@ export default function ChatPage() {
       
       <div className="flex-1 overflow-y-auto">
         <div ref={chatBodyRef} className="px-4 pb-4">
-          <ChatBody messages={messages} isLoading={isLoading} />
+          <ChatBody 
+            messages={messages}
+            isLoading={isLoading}
+            onSuggestionSubmit={handleSubmitSuggestion}
+          />
         </div>
       </div>
         

@@ -1,10 +1,11 @@
 import React from 'react';
 
 interface Props {
-  role: 'user' | 'assistant' | 'system' | 'function' | 'data' | 'tool';
-  content?: string;
+  role: 'system' | 'user' | 'assistant';
+  content: string | JSX.Element;
   isThinking?: boolean;
 }
+
 
 const ChatMessage = ({ role, content, isThinking = false }: Props) => {
   const isUser = role === 'user';

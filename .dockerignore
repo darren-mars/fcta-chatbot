@@ -1,0 +1,36 @@
+# Node/Frontend stuff
+node_modules/
+.next/
+public/
+app/
+components/
+hooks/
+images/
+fonts/
+videos/
+*.svg
+*.png
+*.ico
+*.css
+*.js
+!app.js  # Keep your main Python app file if needed
+
+# Python stuff
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Dev stuff
+.git/
+.env
+.DS_Store
+.vscode/
+.eslintrc.json
+*.config.js
+package*.json
+*.lock
+*.yml
