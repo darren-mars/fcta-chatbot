@@ -226,3 +226,8 @@ override.tf.json
 # Sensitive information
 .terraformrc
 terraform.rc
+
+# pytest
+data/__pycache__/
+data/src/__pycache__/
+data/tests/__pycache__/
