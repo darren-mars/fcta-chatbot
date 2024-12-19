@@ -9,7 +9,7 @@ def get_config():
     
     Returns:
         dict: A dictionary containing configuration parameters such as storage account name, container name, 
-              catalog name, schema name, table name, and checkpoint path.
+        catalog name, schema name, table name, and checkpoint path.
     """
     logger.info("Loading configuration from environment variables.")
     try:

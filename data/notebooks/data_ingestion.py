@@ -6,15 +6,15 @@
 
 # DBTITLE 1,Set environment variables
 import os
-dbutils.widgets.removeAll()
+dbutils.widgets.removeAll() # type: ignore
 
 # Retrieve secrets using dbutils and set them as environment variables for config
 os.environ["STORAGE_ACCOUNT_NAME"] = "fctainnovationstorage"
-os.environ["STORAGE_ACCOUNT_ACCESS_KEY"] = dbutils.secrets.get(scope="my-secret-scope", key="storage-access-key")
+os.environ["STORAGE_ACCOUNT_ACCESS_KEY"] = dbutils.secrets.get(scope="my-secret-scope", key="storage-access-key") # type: ignore
 os.environ["CONTAINER_NAME"] = "dev-chatbot-rag-data"
 os.environ["CATALOG_NAME"] = "fcta_innovation_stream"
 os.environ["SCHEMA_NAME"] = "default"
-os.environ["TABLE_NAME"] = "travel_associates_magazines_contents"
+os.environ["TABLE_NAME"] = "ta_magazines_contents"
 os.environ["CHECKPOINT_PATH"] = "/mnt/dev-chatbot-rag-data/_checkpoint"
 
 # COMMAND ----------
@@ -44,8 +44,8 @@ config = get_config()
 
 # DBTITLE 1,Mount Azure Blob Storage
 try:
-    mount_path = mount_storage(dbutils, config)
-    display(dbutils.fs.ls(mount_path))
+    mount_path = mount_storage(dbutils, config) # type: ignore
+    display(dbutils.fs.ls(mount_path)) # type: ignore
 except Exception as e:
     logger.error(f"Failed to mount storage: {e}")
     raise

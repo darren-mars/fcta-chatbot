@@ -1,5 +1,5 @@
 import logging
-from pyspark.sql.types import StructType, StructField, StringType, TimestampType
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType, ArrayType
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,9 @@ def ensure_table_exists(spark, config):
     logger.info(f"Checking if Delta table {full_table_name} exists.")
     schema = StructType([
         StructField("filename", StringType(), True),
+        StructField("categories_vibe", ArrayType(StringType(), True)),
+        StructField("categories_where", ArrayType(StringType(), True)),
+        StructField("categories_experiences", ArrayType(StringType(), True)),
         StructField("content_chunk", StringType(), True),
         StructField("load_timestamp", TimestampType(), True)
     ])
