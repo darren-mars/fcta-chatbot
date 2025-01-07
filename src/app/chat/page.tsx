@@ -37,7 +37,7 @@ export default function ChatPage() {
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  // this shoulodn't be here
+  // this shouldn't be here but fk it we'll do it live
   const oauthToken = "dapi0ec22d874c1b479080fac1afc5088e97";
 
   useEffect(() => {
@@ -56,6 +56,11 @@ export default function ChatPage() {
 
   const queryDatabricks = async (query: string) => {
     try {
+      // Prepare previous messages for context
+      const previousMessages = messages
+        .filter(msg => msg.role !== 'system')
+        .map(msg => ({ role: msg.role, content: msg.content }));
+
       const vectorResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -64,6 +69,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           query,
           oauthToken,
+          previousMessages,
         }),
       });
   

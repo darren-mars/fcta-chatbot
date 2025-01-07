@@ -12,9 +12,12 @@ interface VectorSearchResponse {
   };
 }
 
+
+const BASE_PROMPT = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
+
 export async function POST(req: NextRequest) {
   try {
-    const { query, oauthToken } = await req.json();
+    const { query, oauthToken, previousMessages } = await req.json();
     if (!query || !oauthToken) {
       return NextResponse.json(
         { error: 'Query text or OAuth token is missing' },
@@ -64,8 +67,9 @@ export async function POST(req: NextRequest) {
           messages: [
             {
               role: "system",
-              content: `You are a helpful travel assistant. Use the following reference information to answer the user's question:\n\n${relevantContext}`,
+              content: `${BASE_PROMPT}\n\n${relevantContext}`,
             },
+            ...previousMessages,
             {
               role: "user",
               content: query,
