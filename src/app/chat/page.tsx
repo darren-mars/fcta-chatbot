@@ -37,8 +37,8 @@ export default function ChatPage() {
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Store the OAuth token here (ideally retrieved securely)
-  const oauthToken = "dapi0ec22d874c1b479080fac1afc5088e97"; // <-- Replace with your actual token retrieval method
+  // this shoulodn't be here
+  const oauthToken = "dapi0ec22d874c1b479080fac1afc5088e97";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,57 +56,60 @@ export default function ChatPage() {
 
   const queryDatabricks = async (query: string) => {
     try {
-      const response = await fetch('/api/chat', {
+      const vectorResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           query,
-          oauthToken // Include the OAuth token here
-        })
+          oauthToken,
+        }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch response');
+  
+      if (!vectorResponse.ok) {
+        throw new Error(`Failed to fetch vector search results: ${vectorResponse.statusText}`);
       }
-
-      const data: DatabricksResponse = await response.json(); // Use the defined type
-      console.log('API Response:', data); // Log the entire response for debugging
-
-      // Check if 'result' and 'data_array' exist and are correctly structured
-      if (!data || !data.result || !data.result.data_array) {
-        throw new Error('Invalid response structure');
+  
+      // Expecting the full response structure
+      const vectorData: DatabricksResponse = await vectorResponse.json();
+  
+      // Check if we have valid vector search results
+      if (!vectorData || !vectorData.result || !vectorData.result.data_array) {
+        throw new Error('Invalid response structure from vector search');
       }
-
-      // Extract content chunks
-      return data.result.data_array.map(result => result[0]).join('\n'); // Accessing content chunks
+  
+      // Extract the assistant's response from the API response
+      const assistantResponse = vectorData.result.data_array[0][0]; // This gets the assistant's message
+  
+      return assistantResponse;
+  
     } catch (error) {
       console.error('Error querying API:', error);
       throw error;
     }
   };
-
+  
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-
+  
     setIsLoading(true);
     setMessages(prev => [...prev, {
       id: uuid(),
       content: input,
       role: 'user'
     }]);
-
+  
     try {
-      const response = await queryDatabricks(input);
-      
+      const response = await queryDatabricks(input); // This now gets the assistant's response
       setMessages(prev => [...prev, {
         id: uuid(),
         content: response,
         role: 'assistant'
       }]);
-
+  
       setInput("");
     } catch (error) {
       console.error('Error processing message:', error);
@@ -119,6 +122,7 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+  
 
   const handleSubmitSuggestion = async (suggestion: string) => {
     if (isLoading) return;

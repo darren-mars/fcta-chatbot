@@ -1,65 +1,108 @@
 // app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
+interface VectorSearchResponse {
+  manifest: {
+    column_count: number;
+    columns: { name: string }[];
+  };
+  result: {
+    row_count: number;
+    data_array: Array<[string, number]>;
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // Log to verify incoming request
-    const { query, oauthToken } = await req.json(); // Expecting oauthToken in the request body
-    if (!query) {
-      return NextResponse.json({ error: 'Query text is missing' }, { status: 400 });
+    const { query, oauthToken } = await req.json();
+    if (!query || !oauthToken) {
+      return NextResponse.json(
+        { error: 'Query text or OAuth token is missing' },
+        { status: 400 }
+      );
     }
 
-    // Check if the OAuth token is provided
-    if (!oauthToken) {
-      return NextResponse.json({ error: 'OAuth token is missing' }, { status: 400 });
-    }
-
-    // Check environment variables
-    const { WORKSPACE_URL } = process.env;
-    if (!WORKSPACE_URL) {
-      throw new Error('Missing required environment variable for Databricks workspace URL');
-    }
-
-    // Step 2: Query the Databricks API using the provided OAuth token
-    const response = await fetch(
-      `${WORKSPACE_URL}/api/2.0/vector-search/indexes/fcta_innovation_stream.default.ta_chatbot_search_idx/query`,
+    // Step 1: Perform vector search
+    const vectorSearchResponse = await fetch(
+      'https://adb-19070432379385.5.azuredatabricks.net/api/2.0/vector-search/indexes/fcta_innovation_stream.default.ta_chatbot_search_idx/query',
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${oauthToken}`,
           'Content-Type': 'application/json;charset=UTF-8',
-          'Accept': 'application/json, text/plain, */*'
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           num_results: 3,
           columns: ["content_chunk"],
-          query_text: query
-        })
+          query_text: query,
+        }),
       }
     );
 
-    // Handle API response errors
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Databricks API response error:', errorText);
-      throw new Error(`Databricks API error: ${response.status} - ${errorText}`);
+    if (!vectorSearchResponse.ok) {
+      throw new Error(`Vector search failed: ${await vectorSearchResponse.text()}`);
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('Error in chat API route:', error.message); // Accessing `message` safely
-      return NextResponse.json(
-        { error: 'Failed to process request', details: error.message }, // Include error details for debugging
-        { status: 500 }
-      );
-    } else {
-      console.error('Unexpected error:', error); // Handle unexpected error types
-      return NextResponse.json(
-        { error: 'Failed to process request', details: 'Unexpected error occurred.' },
-        { status: 500 }
-      );
+    const vectorData: VectorSearchResponse = await vectorSearchResponse.json();
+
+    // Step 2: Combine vectorized chunks into context
+    const relevantContext = vectorData.result.data_array
+      .map(([content]) => content)
+      .join('\n');
+
+    // Step 3: Send combined context, query, and system prompt to the Llama endpoint
+    const llamaResponse = await fetch(
+      'https://adb-19070432379385.5.azuredatabricks.net/serving-endpoints/databricks-meta-llama-3-3-70b-instruct/invocations',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`token:${oauthToken}`).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: `You are a helpful travel assistant. Use the following reference information to answer the user's question:\n\n${relevantContext}`,
+            },
+            {
+              role: "user",
+              content: query,
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!llamaResponse.ok) {
+      throw new Error(`Llama API error: ${await llamaResponse.text()}`);
     }
+
+    const llamaData = await llamaResponse.json();
+
+    // Log llamaData for debugging
+    console.log('Llama API Response:', JSON.stringify(llamaData, null, 2));
+
+    // Extract the assistant's response from the Llama API response
+    const assistantResponse = llamaData.choices[0]?.message?.content || "No response received.";
+
+    // Step 4: Respond with the result
+    return NextResponse.json({
+      manifest: vectorData.manifest,
+      result: {
+        row_count: 1,
+        data_array: [[assistantResponse, 1.0]],
+      },
+    });
+  } catch (error) {
+    console.error('Error in chat API route:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to process request',
+        details: error instanceof Error ? error.message : 'Unknown error occurred',
+      },
+      { status: 500 }
+    );
   }
 }
