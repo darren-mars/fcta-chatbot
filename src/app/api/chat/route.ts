@@ -1,69 +1,65 @@
-import { Message, StreamingTextResponse } from "ai";
+// app/api/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-const WS_URL = 'wss://uhueud8q45.execute-api.us-east-2.amazonaws.com/dev';
-
-export const runtime = "edge";
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { messages, systemPrompt } = await req.json();
+    // Log to verify incoming request
+    const { query, oauthToken } = await req.json(); // Expecting oauthToken in the request body
+    if (!query) {
+      return NextResponse.json({ error: 'Query text is missing' }, { status: 400 });
+    }
 
-    const sessionId = "test-connection-id"; 
+    // Check if the OAuth token is provided
+    if (!oauthToken) {
+      return NextResponse.json({ error: 'OAuth token is missing' }, { status: 400 });
+    }
 
-    const userMessage = messages.find((message: Message) => message.role === "user");
-    const question = userMessage?.content || "";
+    // Check environment variables
+    const { WORKSPACE_URL } = process.env;
+    if (!WORKSPACE_URL) {
+      throw new Error('Missing required environment variable for Databricks workspace URL');
+    }
 
-    const payload = {
-      action: "sendMessage",
-      question,
-      sessionId,
-    };
-
-    // WebSocket connection
-    const resultText = await new Promise<string>((resolve, reject) => {
-      const socket = new WebSocket(WS_URL);
-
-      socket.onopen = () => {
-        console.log("WebSocket connection opened");
-        socket.send(JSON.stringify(payload));
-      };
-
-      socket.onmessage = (event) => {
-        console.log("Message received from WebSocket:", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          resolve(data.text || "");
-        } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
-          reject(error);
-        }
-      };
-
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        reject(new Error("WebSocket connection failed."));
-      };
-
-      socket.onclose = () => {
-        console.log("WebSocket connection closed");
-      };
-    });
-
-    // Create a ReadableStream to stream the response to the frontend
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(resultText); // Push received text to the stream
-        controller.close();
-      },
-    });
-
-    return new StreamingTextResponse(stream); // Send back the streamed text
-
-  } catch (error) {
-    console.error("Error during request processing:", error);
-    return new Response(
-      JSON.stringify({ error: "An error occurred during the request processing" }),
-      { status: 500 }
+    // Step 2: Query the Databricks API using the provided OAuth token
+    const response = await fetch(
+      `${WORKSPACE_URL}/api/2.0/vector-search/indexes/fcta_innovation_stream.default.ta_chatbot_search_idx/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${oauthToken}`,
+          'Content-Type': 'application/json;charset=UTF-8',
+          'Accept': 'application/json, text/plain, */*'
+        },
+        body: JSON.stringify({
+          num_results: 3,
+          columns: ["content_chunk"],
+          query_text: query
+        })
+      }
     );
+
+    // Handle API response errors
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Databricks API response error:', errorText);
+      throw new Error(`Databricks API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Error in chat API route:', error.message); // Accessing `message` safely
+      return NextResponse.json(
+        { error: 'Failed to process request', details: error.message }, // Include error details for debugging
+        { status: 500 }
+      );
+    } else {
+      console.error('Unexpected error:', error); // Handle unexpected error types
+      return NextResponse.json(
+        { error: 'Failed to process request', details: 'Unexpected error occurred.' },
+        { status: 500 }
+      );
+    }
   }
 }
