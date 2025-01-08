@@ -1,68 +1,111 @@
-import { Message, StreamingTextResponse } from "ai";
+// app/api/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-const WS_URL = 'wss://uhueud8q45.execute-api.us-east-2.amazonaws.com/dev';
+interface VectorSearchResponse {
+  manifest: {
+    column_count: number;
+    columns: { name: string }[];
+  };
+  result: {
+    row_count: number;
+    data_array: Array<[string, number]>;
+  };
+}
 
-export const runtime = "edge";
 
-export async function POST(req: Request) {
+const BASE_PROMPT = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
+
+export async function POST(req: NextRequest) {
   try {
-    const { messages, systemPrompt } = await req.json();
+    const { query, oauthToken, previousMessages } = await req.json();
+    if (!query || !oauthToken) {
+      return NextResponse.json(
+        { error: 'Query text or OAuth token is missing' },
+        { status: 400 }
+      );
+    }
 
-    const sessionId = "test-connection-id"; 
+    // Step 1: Perform vector search
+    const vectorSearchResponse = await fetch(
+      'https://adb-19070432379385.5.azuredatabricks.net/api/2.0/vector-search/indexes/fcta_innovation_stream.default.ta_chatbot_search_idx/query',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${oauthToken}`,
+          'Content-Type': 'application/json;charset=UTF-8',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          num_results: 3,
+          columns: ["content_chunk"],
+          query_text: query,
+        }),
+      }
+    );
 
-    const userMessage = messages.find((message: Message) => message.role === "user");
-    const question = userMessage?.content || "";
+    if (!vectorSearchResponse.ok) {
+      throw new Error(`Vector search failed: ${await vectorSearchResponse.text()}`);
+    }
 
-    const payload = {
-      action: "sendMessage",
-      question,
-      sessionId,
-    };
+    const vectorData: VectorSearchResponse = await vectorSearchResponse.json();
 
-    // WebSocket connection
-    const resultText = await new Promise<string>((resolve, reject) => {
-      const socket = new WebSocket(WS_URL);
+    // Step 2: Combine vectorized chunks into context
+    const relevantContext = vectorData.result.data_array
+      .map(([content]) => content)
+      .join('\n');
 
-      socket.onopen = () => {
-        console.log("WebSocket connection opened");
-        socket.send(JSON.stringify(payload));
-      };
+    // Step 3: Send combined context, query, and system prompt to the Llama endpoint
+    const llamaResponse = await fetch(
+      'https://adb-19070432379385.5.azuredatabricks.net/serving-endpoints/databricks-meta-llama-3-3-70b-instruct/invocations',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`token:${oauthToken}`).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: `${BASE_PROMPT}\n\n${relevantContext}`,
+            },
+            ...previousMessages,
+            {
+              role: "user",
+              content: query,
+            },
+          ],
+        }),
+      }
+    );
 
-      socket.onmessage = (event) => {
-        console.log("Message received from WebSocket:", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          resolve(data.text || "");
-        } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
-          reject(error);
-        }
-      };
+    if (!llamaResponse.ok) {
+      throw new Error(`Llama API error: ${await llamaResponse.text()}`);
+    }
 
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        reject(new Error("WebSocket connection failed."));
-      };
+    const llamaData = await llamaResponse.json();
 
-      socket.onclose = () => {
-        console.log("WebSocket connection closed");
-      };
-    });
+    // Log llamaData for debugging
+    console.log('Llama API Response:', JSON.stringify(llamaData, null, 2));
 
-    // Create a ReadableStream to stream the response to the frontend
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(resultText); // Push received text to the stream
-        controller.close();
+    // Extract the assistant's response from the Llama API response
+    const assistantResponse = llamaData.choices[0]?.message?.content || "No response received.";
+
+    // Step 4: Respond with the result
+    return NextResponse.json({
+      manifest: vectorData.manifest,
+      result: {
+        row_count: 1,
+        data_array: [[assistantResponse, 1.0]],
       },
     });
-
-    return new StreamingTextResponse(stream); // Send back the streamed text
-
   } catch (error) {
-    console.error("Error during request processing:", error);
-    return new Response(
-      JSON.stringify({ error: "An error occurred during the request processing" }),
+    console.error('Error in chat API route:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to process request',
+        details: error instanceof Error ? error.message : 'Unknown error occurred',
+      },
       { status: 500 }
     );
   }

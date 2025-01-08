@@ -6,6 +6,18 @@ import VideoBanner from "@/components/VideoBanner";
 import ChatFooter from "@/components/ChatFooter";
 import ChatBody from "@/components/ChatBody";
 
+// Define the structure for the API response
+interface DatabricksResponse {
+  manifest: {
+    column_count: number;
+    columns: { name: string }[];
+  };
+  result: {
+    row_count: number;
+    data_array: Array<[string, number]>; // Array of tuples containing content and score
+  };
+}
+
 interface Message {
   id: string;
   content: string;
@@ -22,9 +34,11 @@ export default function ChatPage() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const ws = useRef<WebSocket | null>(null);
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+
+  // this shouldn't be here but fk it we'll do it live
+  const oauthToken = "dapi0ec22d874c1b479080fac1afc5088e97";
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,85 +54,84 @@ export default function ChatPage() {
     }
   }, [messages]);
 
-  useEffect(() => {
-    ws.current = new WebSocket('wss://uhueud8q45.execute-api.us-east-2.amazonaws.com/dev');
-    
-    ws.current.onmessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data);
-      const chunk = data.chunk;
-      
-      if (chunk && typeof chunk === 'string') {
-        setMessages(prevMessages => {
-          const lastMessage = prevMessages[prevMessages.length - 1];
-          
-          if (lastMessage && lastMessage.role === 'assistant') {
-            return prevMessages.map((msg, index) => {
-              if (index === prevMessages.length - 1) {
-                return {
-                  ...msg,
-                  content: msg.content + chunk
-                };
-              }
-              return msg;
-            });
-          }
-          
-          return [...prevMessages, {
-            id: uuid(),
-            content: chunk,
-            role: 'assistant'
-          }];
-        });
+  const queryDatabricks = async (query: string) => {
+    try {
+      // Prepare previous messages for context
+      const previousMessages = messages
+        .filter(msg => msg.role !== 'system')
+        .map(msg => ({ role: msg.role, content: msg.content }));
+
+      const vectorResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          oauthToken,
+          previousMessages,
+        }),
+      });
+  
+      if (!vectorResponse.ok) {
+        throw new Error(`Failed to fetch vector search results: ${vectorResponse.statusText}`);
       }
-      
-      if (data.end) {
-        setIsLoading(false);
+  
+      // Expecting the full response structure
+      const vectorData: DatabricksResponse = await vectorResponse.json();
+  
+      // Check if we have valid vector search results
+      if (!vectorData || !vectorData.result || !vectorData.result.data_array) {
+        throw new Error('Invalid response structure from vector search');
       }
-    };
-
-    ws.current.onerror = (error: Event) => {
-      console.error('WebSocket error:', error);
-      setIsLoading(false);
-    };
-
-    ws.current.onclose = () => {
-      console.log('WebSocket connection closed');
-      setIsLoading(false);
-    };
-
-    return () => {
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.close();
-      }
-    };
-  }, []);
-
+  
+      // Extract the assistant's response from the API response
+      const assistantResponse = vectorData.result.data_array[0][0]; // This gets the assistant's message
+  
+      return assistantResponse;
+  
+    } catch (error) {
+      console.error('Error querying API:', error);
+      throw error;
+    }
+  };
+  
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !ws.current) return;
-
+    if (!input.trim() || isLoading) return;
+  
     setIsLoading(true);
     setMessages(prev => [...prev, {
       id: uuid(),
       content: input,
       role: 'user'
     }]);
-
+  
     try {
-      ws.current.send(JSON.stringify({
-        action: "sendMessage",
-        question: input,
-      }));
-
+      const response = await queryDatabricks(input); // This now gets the assistant's response
+      setMessages(prev => [...prev, {
+        id: uuid(),
+        content: response,
+        role: 'assistant'
+      }]);
+  
       setInput("");
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error processing message:', error);
+      setMessages(prev => [...prev, {
+        id: uuid(),
+        content: "I apologize, but I encountered an error processing your request. Please try again.",
+        role: 'assistant'
+      }]);
+    } finally {
       setIsLoading(false);
     }
   };
+  
 
-  const handleSubmitSuggestion = (suggestion: string) => {
-    if (isLoading || !ws.current) return;
+  const handleSubmitSuggestion = async (suggestion: string) => {
+    if (isLoading) return;
 
     setIsLoading(true);
     setMessages(prev => [...prev, {
@@ -128,12 +141,21 @@ export default function ChatPage() {
     }]);
 
     try {
-      ws.current.send(JSON.stringify({
-        action: "sendMessage",
-        question: suggestion,
-      }));
+      const response = await queryDatabricks(suggestion);
+      
+      setMessages(prev => [...prev, {
+        id: uuid(),
+        content: response,
+        role: 'assistant'
+      }]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error processing suggestion:', error);
+      setMessages(prev => [...prev, {
+        id: uuid(),
+        content: "I apologize, but I encountered an error processing your request. Please try again.",
+        role: 'assistant'
+      }]);
+    } finally {
       setIsLoading(false);
     }
   };
