@@ -1,32 +1,49 @@
 import logging
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
-def mount_storage(dbutils, config):
+def mount_storage(dbutils, config: Dict[str, Any]) -> List[str]:
     """
-    Mounts the Azure Blob Storage container specified in the configuration if not already mounted.
+    Mounts Azure Blob Storage containers based on the provided configuration.
     
     Args:
-        dbutils: Databricks utilities object.
-        config (dict): Configuration dictionary containing storage account and container info.
+        dbutils: Databricks utilities for mounting storage.
+        config (Dict[str, Any]): Configuration dictionary containing mount point details.
     
     Returns:
-        str: The mount point for the Azure Blob Storage container.
+        List[str]: List of successfully mounted paths.
     """
-    mount_point = f"/mnt/{config['container_name']}"
-    logger.info(f"Attempting to mount {config['container_name']} at {mount_point}.")
-    try:
-        mounts = [m.mountPoint for m in dbutils.fs.mounts()]
-        if mount_point not in mounts:
+    mounted_paths = []
+    
+    for mount in config.get("mount_points", []):
+        container_name = mount["container_name"]
+        storage_account_name = mount["storage_account_name"]
+        storage_account_access_key = mount["storage_account_access_key"]
+        data_source_type = mount["data_source_type"].lower()
+        
+        mount_point = f"/mnt/{container_name}"
+        
+        try:
+            # Check if already mounted
+            if any(m.mountPoint == mount_point for m in dbutils.fs.mounts()):
+                logger.info(f"Mount point '{mount_point}' already exists. Skipping.")
+                mounted_paths.append(mount_point)
+                continue
+            
+            # Construct the source URL
+            source = f"wasbs://{container_name}@{storage_account_name}.blob.core.windows.net/"
+            
+            # Mount the storage
             dbutils.fs.mount(
-                source=f"wasbs://{config['container_name']}@{config['storage_account_name']}.blob.core.windows.net/",
+                source=source,
                 mount_point=mount_point,
-                extra_configs={f"fs.azure.account.key.{config['storage_account_name']}.blob.core.windows.net": config['storage_account_access_key']}
+                extra_configs={f"fs.azure.account.key.{storage_account_name}.blob.core.windows.net": storage_account_access_key}
             )
-            logger.info(f"Mounted {config['container_name']} successfully at {mount_point}.")
-        else:
-            logger.info(f"{mount_point} is already mounted.")
-        return mount_point
-    except Exception as e:
-        logger.error(f"Error mounting storage: {e}")
-        raise
+            logger.info(f"Successfully mounted '{mount_point}'.")
+            mounted_paths.append(mount_point)
+        except Exception as e:
+            logger.error(f"Failed to mount '{mount_point}': {e}", exc_info=True)
+            raise
+    
+    return mounted_paths

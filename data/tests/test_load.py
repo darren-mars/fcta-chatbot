@@ -1,3 +1,4 @@
+# test_load.py
 from unittest.mock import MagicMock, patch
 import pytest
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType, BinaryType, LongType
@@ -6,17 +7,31 @@ from pyspark.sql.types import ArrayType
 
 from data.src.load import ingest
 
-def test_ingest_batch_mode(spark_session):
+@patch("data.src.load.ensure_table_exists")
+def test_ingest_batch_mode(mock_ensure_table_exists, spark_session):
     config = {
         "catalog_name": "cat",
         "schema_name": "sch",
         "table_name": "tbl",
-        "container_name": "my_container",
-        "checkpoint_path": "/mnt/my_container/_checkpoint"
+        "checkpoint_path": "/mnt/my_container/_checkpoint",
+        "mount_points": [
+            {
+                "container_name": "my_container",
+                "storage_account_name": "acc",
+                "storage_account_access_key": "key",
+                "data_source_type": "csv",
+                "subdirectories": [
+                    {
+                        "name": "subdir1",
+                        "schema_name": "schema1",
+                        "columns": ["col1", "col2"]
+                    }
+                ]
+            }
+        ]
     }
 
     # Create a mock UDF that returns an array of strings to simulate the real UDF
-    from pyspark.sql.functions import udf, col
     mock_extract_and_chunk_text_udf = udf(lambda c: ["chunk1", "chunk2"], ArrayType(StringType()))
 
     # Instead of using a real DataFrame, create a chainable mock that pretends to be streaming
@@ -42,9 +57,9 @@ def test_ingest_batch_mode(spark_session):
     # We also need to mock the DataStreamReader methods to return our mock_streaming_df
     from pyspark.sql.streaming import DataStreamReader
     with patch.object(DataStreamReader, 'format', return_value=MagicMock()) as mock_format, \
-    patch.object(DataStreamReader, 'option', return_value=MagicMock()) as mock_option, \
-    patch.object(DataStreamReader, 'schema', return_value=MagicMock()) as mock_schema, \
-    patch.object(DataStreamReader, 'load', return_value=mock_streaming_df) as mock_load:
+         patch.object(DataStreamReader, 'option', return_value=MagicMock()) as mock_option, \
+         patch.object(DataStreamReader, 'schema', return_value=MagicMock()) as mock_schema, \
+         patch.object(DataStreamReader, 'load', return_value=mock_streaming_df) as mock_load:
 
         # Setup the chain return values for DataStreamReader methods
         mock_format.return_value.format = mock_format
@@ -60,5 +75,6 @@ def test_ingest_batch_mode(spark_session):
         ingest(spark_session, config, mock_extract_and_chunk_text_udf)
 
         # Assertions to verify the streaming behavior
+        mock_ensure_table_exists.assert_called_once_with(spark_session, config)
         write_stream_mock.trigger.assert_called_once_with(availableNow=True)
         write_stream_mock.table.assert_called_once_with("cat.sch.tbl")
