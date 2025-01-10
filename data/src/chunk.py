@@ -28,8 +28,8 @@ logger = initialize_logger()
 
 def chunk_text_general(
     texts: List[str],
-    chunk_size: int = 1000,
-    overlap_size: int = 100
+    chunk_size: int = 2000,
+    overlap_size: int = 200
 ) -> List[str]:
     """
     Aggregates smaller text blocks (~multiple rows or pages) until ~chunk_size is reached,
@@ -66,8 +66,8 @@ def chunk_text_general(
 
 def extract_pdf_text(
     content: bytes, 
-    chunk_size: int = 1000, 
-    overlap_size: int = 100
+    chunk_size: int = 2000, 
+    overlap_size: int = 200
 ) -> List[str]:
     text_chunks: List[str] = []
     if not content:
@@ -122,16 +122,11 @@ def extract_pdf_text(
     logger.info(f"Extracted {len(text_chunks)} text chunks total from this PDF.")
     return text_chunks
 
-# ------------------------------------------------------------------------------
-# Optional UDFs if you want direct Spark transformations:
-# ------------------------------------------------------------------------------
-
-# If you want to apply 'extract_pdf_text' within Spark:
 # This returns an array of chunks for each PDF row
 extract_pdf_text_udf = udf(lambda c: extract_pdf_text(c, 4000, 400), ArrayType(StringType()))
 
-# If you want to apply chunk_text_general to an array of strings in Spark:
+# Apply chunk_text_general to an array of strings in Spark:
 def chunk_text_general_udf_func(text_list: List[str]) -> List[str]:
-    return chunk_text_general(text_list, 1000, 100)
+    return chunk_text_general(text_list, 2000, 200)
 
 chunk_text_general_spark_udf = udf(chunk_text_general_udf_func, ArrayType(StringType()))

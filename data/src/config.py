@@ -46,10 +46,6 @@ MOUNT_POINTS_SCHEMA = {
 
 TABLE_SCHEMA = [
     {"name": "filename", "type": "string"},
-    {"name": "categories_vibe", "type": "array<string>"},
-    {"name": "categories_where", "type": "array<string>"},
-    {"name": "categories_experiences", "type": "array<string>"},
-    {"name": "categories_accomodations", "type": "array<string>"},
     {"name": "content_chunk", "type": "string"},
     {"name": "load_timestamp", "type": "timestamp"},
 ]

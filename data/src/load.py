@@ -47,9 +47,6 @@ def get_binary_schema() -> StructType:
         StructField("content", BinaryType(), True),
     ])
 
-def get_csv_schema(columns: List[str]) -> StructType:
-    return StructType([StructField(column, StringType(), True) for column in columns])
-
 def process_pdf_mount_point(
     spark: SparkSession,
     mount: Dict[str, Any],
@@ -89,10 +86,6 @@ def process_pdf_mount_point(
 
         pdf_schema = StructType([
             StructField("filename", StringType(), True),
-            StructField("categories_vibe", ArrayType(StringType()), True),
-            StructField("categories_where", ArrayType(StringType()), True),
-            StructField("categories_experiences", ArrayType(StringType()), True),
-            StructField("categories_accomodations", ArrayType(StringType()), True),
             StructField("content_chunk", StringType(), True),
             StructField("load_timestamp", TimestampType(), True),
         ])
@@ -107,10 +100,6 @@ def process_pdf_mount_point(
                 # load_timestamp we'll fill after DataFrame creation.
                 rows_for_df.append((
                     filename_val,
-                    None,  # categories_vibe
-                    None,  # categories_where
-                    None,  # categories_experiences
-                    None,  # categories_accomodations
                     chunk,
                     None   # load_timestamp (will do current_timestamp later)
                 ))
@@ -174,10 +163,6 @@ def process_csv_mount_point(
         csv_schema_location = f"{config['checkpoint_path']}/csv/{subdir_name}/schema"
         csv_checkpoint_path = f"{config['checkpoint_path']}/csv/{subdir_name}/checkpoint"
 
-        csv_schema = get_csv_schema(needed_columns)
-
-        assert(set(csv_schema.fieldNames()) == set(needed_columns), "Schema mismatch with needed_columns")
-
         # Read CSV with multiLine and proper quote options
         csv_stream_df = (
             spark.readStream.format("cloudFiles")
@@ -189,10 +174,8 @@ def process_csv_mount_point(
             .option("inferSchema", "false")
             .option("sep", ",")
             .option("multiLine", "true")      # Handle multi-line fields
-            .option("quote", '"') \
-            .option("escape", '"') \
+            .option("quote", "|") \
             .option("mode", "PERMISSIVE")    # Continue parsing even if some rows are malformed
-            .schema(csv_schema)
             .load(f"{mount_point}/{subdir_name}/")
             .withColumn("full_path", input_file_name())
             .select(*needed_columns, "full_path")
@@ -207,18 +190,11 @@ def process_csv_mount_point(
                 logger.info(f"[CSV - packages-website] Micro-batch {batch_id}, {df.count()} records.")
                 collected_rows = df.collect()
 
-                print(f"Schema of the DataFrame: {df.schema}")
-                print(f"Needed columns: {needed_columns}")
-
                 from pyspark.sql.types import (
                     StructType, StructField, StringType, ArrayType, TimestampType
                 )
                 final_schema = StructType([
                     StructField("filename", StringType(), True),
-                    StructField("categories_vibe", ArrayType(StringType()), True),
-                    StructField("categories_where", ArrayType(StringType()), True),
-                    StructField("categories_experiences", ArrayType(StringType()), True),
-                    StructField("categories_accomodations", ArrayType(StringType()), True),
                     StructField("content_chunk", StringType(), True),
                     StructField("load_timestamp", TimestampType(), True),
                 ])
@@ -245,8 +221,6 @@ def process_csv_mount_point(
                     metadata_parts = []
                     for c in needed_columns:
                         if c not in ["product_description", "full_path"]:
-                            print("Column title: ", c)
-                            print("Column content: ", row[c])
                             val = row[c]
                             val_str = cleanse_html(str(val)) if val else ""
                             metadata_parts.append(f"{c}={val_str}")
@@ -261,10 +235,6 @@ def process_csv_mount_point(
                         combined_chunk = f"{product_desc_clean}\nMetadata:\n{metadata_str}"
                         final_rows.append((
                             filename_val,
-                            None,  # categories_vibe
-                            None,  # categories_where
-                            None,  # categories_experiences
-                            None,  # categories_accomodations
                             combined_chunk,
                             None,  # load_timestamp
                         ))
@@ -275,10 +245,6 @@ def process_csv_mount_point(
                             combined_chunk = f"{subc}\nMetadata:\n{metadata_str}"
                             final_rows.append((
                                 filename_val,
-                                None,
-                                None,
-                                None,
-                                None,
                                 combined_chunk,
                                 None,  # load_timestamp
                             ))
@@ -325,10 +291,6 @@ def process_csv_mount_point(
                 )
                 final_schema = StructType([
                     StructField("filename", StringType(), True),
-                    StructField("categories_vibe", ArrayType(StringType()), True),
-                    StructField("categories_where", ArrayType(StringType()), True),
-                    StructField("categories_experiences", ArrayType(StringType()), True),
-                    StructField("categories_accomodations", ArrayType(StringType()), True),
                     StructField("content_chunk", StringType(), True),
                     StructField("load_timestamp", TimestampType(), True),
                 ])
@@ -343,10 +305,6 @@ def process_csv_mount_point(
                     if row_text and row_text.strip():
                         final_rows.append((
                             filename_val,
-                            None,  # categories_vibe
-                            None,  # categories_where
-                            None,  # categories_experiences
-                            None,  # categories_accomodations
                             row_text,
                             None,  # load_timestamp
                         ))

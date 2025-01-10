@@ -100,13 +100,10 @@ except Exception as e:
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %sql
-# MAGIC select * from ta_itinerary_chatbot_rag_test 
-# MAGIC where split(filename, '\\.')[1] = 'csv'
+# MAGIC select *
+# MAGIC from ta_itinerary_chatbot_rag_test 
+# MAGIC where split(filename, '\\.')[1] = 'pdf'
 # MAGIC limit 10
 
 # COMMAND ----------
@@ -126,3 +123,179 @@ dbutils.library.restartPython()
 # MAGIC from ta_itinerary_chatbot_rag_test
 # MAGIC where filename = 'ta_website_scraped_packages.csv'
 # MAGIC and len(content_chunk) < 900
+
+# COMMAND ----------
+
+from pyspark.sql.types import StructType, StructField, StringType
+
+from typing import List
+
+def get_csv_schema(columns: List[str]) -> StructType:
+    return StructType([StructField(column, StringType(), True) for column in columns])
+
+subdir = {
+                "name": "packages-website",
+                "schema_name": "packages_website",
+                "columns": [
+                    "airline_name_selection",
+                    "expoint_destination",
+                    "price_secondary",
+                    "tag_line",
+                    "hotel_commerce_info",
+                    "land_ex_points",
+                    "commerce_publish_date",
+                    "price",
+                    "search_result_weight",
+                    "supplier",
+                    "id",
+                    "product_description",
+                    "sku",
+                    "brand",
+                    "ship_id",
+                    "bookable_type",
+                    "campaign_medium",
+                    "images",
+                    "travellers",
+                    "ship_line",
+                    "indexed",
+                    "field_product_holiday_experience:name",
+                    "airline_name",
+                    "price_zar_computed",
+                    "package_description",
+                    "tags",
+                    "campaign_location",
+                    "departing_months",
+                    "selection",
+                    "meta",
+                    "conditions",
+                    "air_ex_points",
+                    "inclusions",
+                    "supplier_product_code",
+                    "commerce_expiry_date",
+                    "status",
+                    "continent",
+                    "supplier_secondary_image",
+                    "bookable",
+                    "latitude",
+                    "product_status",
+                    "supplier_condition",
+                    "availability",
+                    "price_usd_computed",
+                    "expoint_category",
+                    "booking_class",
+                    "price_gbp_computed",
+                    "destination_geo",
+                    "campaign_end_date",
+                    "travel_dates",
+                    "hotel_commerce_id",
+                    "address",
+                    "has_price",
+                    "price_cad_computed",
+                    "upsell_options",
+                    "price_zar",
+                    "price_hkd_computed",
+                    "price_sgd_computed",
+                    "price_nzd",
+                    "roundtrip",
+                    "campaign_start_date",
+                    "origin_code",
+                    "duration_minutes",
+                    "duration_days",
+                    "price_nzd_computed",
+                    "destination_category",
+                    "air_sale_date",
+                    "price_cad",
+                    "country",
+                    "seo_url",
+                    "price_aud_computed",
+                    "raw_inclusions",
+                    "routing_code",
+                    "field_product_campaign_medium:name",
+                    "experience_type",
+                    "pricead_from",
+                    "star_rating",
+                    "price_aed",
+                    "price_hkd",
+                    "promotion_start_date",
+                    "package_name_category",
+                    "destination_in",
+                    "ship_name",
+                    "longitude",
+                    "child_price",
+                    "maps",
+                    "pricead_was",
+                    "created",
+                    "search_api_language",
+                    "oneway_flag",
+                    "destination_selection",
+                    "alt_package_name",
+                    "experiences",
+                    "destination_code",
+                    "price_gbp",
+                    "expoint_selection",
+                    "itinerary_destination_in",
+                    "departure",
+                    "changed",
+                    "price_usd",
+                    "campaign_location_list",
+                    "destination",
+                    "description",
+                    "gne_reference",
+                    "price_sgd",
+                    "airline_logo",
+                    "land_extra_nights",
+                    "line_id",
+                    "duration",
+                    "promotion_end_date",
+                    "itinerary_last",
+                    "comments",
+                    "supplier_exclusion",
+                    "price_tax",
+                    "price_aud",
+                    "airline_name_destination",
+                    "field_product_tags:name",
+                    "expoint_country",
+                    "extra_info",
+                    "airline_code",
+                    "package_name",
+                    "category",
+                    "supplier_product_image"
+                ],
+                "needed_columns": [
+                    "product_description",
+                    "brand",
+                    "travellers",
+                    "field_product_holiday_experience:name",
+                    "package_description",
+                    "tags",
+                    "departing_months",
+                    "selection",
+                    "inclusions",
+                    "continent",
+                    "destination_geo",
+                    "duration_days",
+                    "country",
+                    "experience_type",
+                    "destination_in",
+                    "experiences",
+                    "campaign_location_list",
+                    "destination",
+                    "package_name"
+                ]
+            }
+
+csv_schema = get_csv_schema(subdir.get("needed_columns", None))
+
+df = (
+        spark.read.format("csv")
+        .option("header", "true")
+        .option("inferSchema", "false")
+        .option("sep", ",")
+        .option("multiLine", "true")      # Handle multi-line fields
+        .option("quote", "|") \
+        .option("mode", "PERMISSIVE")    # Continue parsing even if some rows are malformed
+        .schema(csv_schema)
+        .load(f"/mnt/chatbot-rag-data/csv/debug/")
+)
+
+display(df)
