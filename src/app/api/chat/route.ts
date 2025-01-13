@@ -1,5 +1,8 @@
-// app/api/chat/route.ts
+// /app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { formatSelectionsForQuery } from '@/lib/formatSelections'; 
+// If you have a second script for sending user selections to RAG, 
+// you might import it here. But typically, that's used on the FRONT end. 
 
 interface VectorSearchResponse {
   manifest: {
@@ -12,15 +15,34 @@ interface VectorSearchResponse {
   };
 }
 
-
 const BASE_PROMPT = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
 
 export async function POST(req: NextRequest) {
   try {
-    const { query, oauthToken, previousMessages } = await req.json();
-    if (!query || !oauthToken) {
+    // 1. Parse Body
+    // We expect the front end to send either:
+    //   { userSelections, oauthToken, previousMessages }
+    // or 
+    //   { query, oauthToken, previousMessages }
+    const { query, userSelections, oauthToken, previousMessages = [] } = await req.json();
+
+    // 2. Validate OAuth token
+    if (!oauthToken) {
       return NextResponse.json(
-        { error: 'Query text or OAuth token is missing' },
+        { error: 'OAuth token is missing' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Handle input: if we received structured JSON, convert it to text query
+    let finalQuery = query;
+    if (!finalQuery && userSelections) {
+      finalQuery = formatSelectionsForQuery(userSelections);
+    }
+
+    if (!finalQuery) {
+      return NextResponse.json(
+        { error: 'No query or userSelections provided' },
         { status: 400 }
       );
     }
@@ -31,14 +53,14 @@ export async function POST(req: NextRequest) {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${oauthToken}`,
+          Authorization: `Bearer ${oauthToken}`,
           'Content-Type': 'application/json;charset=UTF-8',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           num_results: 3,
-          columns: ["content_chunk"],
-          query_text: query,
+          columns: ['content_chunk'],
+          query_text: finalQuery,
         }),
       }
     );
@@ -60,19 +82,19 @@ export async function POST(req: NextRequest) {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`token:${oauthToken}`).toString('base64')}`,
+          Authorization: `Basic ${Buffer.from(`token:${oauthToken}`).toString('base64')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           messages: [
             {
-              role: "system",
+              role: 'system',
               content: `${BASE_PROMPT}\n\n${relevantContext}`,
             },
             ...previousMessages,
             {
-              role: "user",
-              content: query,
+              role: 'user',
+              content: finalQuery,
             },
           ],
         }),
@@ -89,7 +111,7 @@ export async function POST(req: NextRequest) {
     console.log('Llama API Response:', JSON.stringify(llamaData, null, 2));
 
     // Extract the assistant's response from the Llama API response
-    const assistantResponse = llamaData.choices[0]?.message?.content || "No response received.";
+    const assistantResponse = llamaData.choices?.[0]?.message?.content || 'No response received.';
 
     // Step 4: Respond with the result
     return NextResponse.json({
@@ -99,6 +121,7 @@ export async function POST(req: NextRequest) {
         data_array: [[assistantResponse, 1.0]],
       },
     });
+
   } catch (error) {
     console.error('Error in chat API route:', error);
     return NextResponse.json(
