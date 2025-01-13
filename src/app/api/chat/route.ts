@@ -1,8 +1,5 @@
-// /app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { formatSelectionsForQuery } from '@/lib/formatSelections'; 
-// If you have a second script for sending user selections to RAG, 
-// you might import it here. But typically, that's used on the FRONT end. 
+import { formatSelectionsForQuery } from '@/lib/formatSelections';
 
 interface VectorSearchResponse {
   manifest: {
