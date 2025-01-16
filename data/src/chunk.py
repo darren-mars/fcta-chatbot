@@ -9,6 +9,7 @@ from PIL import Image
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType, ArrayType
 
+
 def initialize_logger(name: str = __name__) -> logging.Logger:
     """
     Initializes and configures the logger for the chunking module.
@@ -24,7 +25,9 @@ def initialize_logger(name: str = __name__) -> logging.Logger:
         logger.addHandler(handler)
     return logger
 
+
 logger = initialize_logger()
+
 
 def chunk_text_general(
     texts: List[str],
@@ -32,8 +35,9 @@ def chunk_text_general(
     overlap_size: int = 200
 ) -> List[str]:
     """
-    Aggregates smaller text blocks (~multiple rows or pages) until ~chunk_size is reached,
-    then splits them into overlapping segments. Useful for both CSV and PDF ingestion.
+    Aggregates smaller text blocks (~multiple rows or pages) until ~chunk_size
+    is reached, then splits them into overlapping segments. Useful for both
+    CSV and PDF ingestion.
     """
     aggregated_blocks = []
     current_block = ""
@@ -57,16 +61,17 @@ def chunk_text_general(
     for block in aggregated_blocks:
         i = 0
         while i < len(block):
-            chunk = block[i : i + chunk_size]
+            chunk = block[i:i + chunk_size]
             if chunk.strip():
                 final_chunks.append(chunk)
             i += (chunk_size - overlap_size)
 
     return final_chunks
 
+
 def extract_pdf_text(
-    content: bytes, 
-    chunk_size: int = 2000, 
+    content: bytes,
+    chunk_size: int = 2000,
     overlap_size: int = 200
 ) -> List[str]:
     text_chunks: List[str] = []
@@ -91,16 +96,25 @@ def extract_pdf_text(
                 pix = page.get_pixmap()
                 img = Image.open(io.BytesIO(pix.tobytes()))
                 ocr_text = pytesseract.image_to_string(img)
-                logger.info(f"OCR extracted text from page {page_num}: {len(ocr_text)} chars.")
+                logger.info(
+                    f"OCR extracted text from page {page_num}: "
+                    f"{len(ocr_text)} chars."
+                )
                 final_text = ocr_text
             else:
                 final_text = raw_text
 
             # Filter after we've extracted final_text
-            if len(final_text) > 300 and 'C O N T E N T S' not in final_text.upper():
+            if (
+                len(final_text) > 300
+                and 'C O N T E N T S' not in final_text.upper()
+            ):
                 big_text.append(final_text)  # Store in a list for later
             else:
-                logger.info(f"Skipping page {page_num} (insufficient or 'C O N T E N T S').")
+                logger.info(
+                    f"""Skipping page {page_num}
+                    (insufficient or 'C O N T E N T S')."""
+                )
 
         # Now combine the pages we kept into one big string
         combined_text = " ".join(big_text)
@@ -109,24 +123,39 @@ def extract_pdf_text(
             # Only now do we chunk
             i = 0
             while i < len(combined_text):
-                chunk = combined_text[i : i + chunk_size]
+                chunk = combined_text[i:i + chunk_size]
                 if chunk.strip():
                     text_chunks.append(chunk)
                 i += (chunk_size - overlap_size)
         else:
-            logger.info("No text after filtering, possibly blank or 'contents' pages only.")
+            logger.info(
+                "No text after filtering, possibly blank or 'contents' pages "
+                "only."
+            )
 
     except Exception as e:
         logger.error(f"Error extracting PDF text: {e}", exc_info=True)
 
-    logger.info(f"Extracted {len(text_chunks)} text chunks total from this PDF.")
+    logger.info(
+        f"Extracted {len(text_chunks)} text chunks total from this PDF."
+    )
     return text_chunks
 
+
 # This returns an array of chunks for each PDF row
-extract_pdf_text_udf = udf(lambda c: extract_pdf_text(c, 4000, 400), ArrayType(StringType()))
+extract_pdf_text_udf = udf(
+    lambda c: extract_pdf_text(c, 4000, 400),
+    ArrayType(StringType())
+)
+
 
 # Apply chunk_text_general to an array of strings in Spark:
 def chunk_text_general_udf_func(text_list: List[str]) -> List[str]:
-    return chunk_text_general(text_list, 2000, 200)
+    return chunk_text_general(
+        text_list, 2000, 200
+    )
 
-chunk_text_general_spark_udf = udf(chunk_text_general_udf_func, ArrayType(StringType()))
+
+chunk_text_general_spark_udf = udf(
+    chunk_text_general_udf_func, ArrayType(StringType())
+)

@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
+
 def mount_storage(dbutils, config: Dict[str, Any]) -> List[str]:
     """
     Mounts Azure Blob Storage containers based on the provided configuration.
@@ -20,7 +21,6 @@ def mount_storage(dbutils, config: Dict[str, Any]) -> List[str]:
         container_name = mount["container_name"]
         storage_account_name = mount["storage_account_name"]
         storage_account_access_key = mount["storage_account_access_key"]
-        data_source_type = mount["data_source_type"].lower()
         
         mount_point = f"/mnt/{container_name}"
         
@@ -38,7 +38,9 @@ def mount_storage(dbutils, config: Dict[str, Any]) -> List[str]:
             dbutils.fs.mount(
                 source=source,
                 mount_point=mount_point,
-                extra_configs={f"fs.azure.account.key.{storage_account_name}.blob.core.windows.net": storage_account_access_key}
+                extra_configs={
+                    f"fs.azure.account.key.{storage_account_name}.blob.core.windows.net": storage_account_access_key
+                }
             )
             logger.info(f"Successfully mounted '{mount_point}'.")
             mounted_paths.append(mount_point)

@@ -1,17 +1,8 @@
 import json
 import jsonschema
 import logging
-from typing import Any, Dict, List
 import os
-import re
-
-from pyspark.sql.types import (
-    StructType,
-    StructField,
-    StringType,
-    TimestampType,
-    ArrayType,
-)
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +31,13 @@ MOUNT_POINTS_SCHEMA = {
                 }
             }
         },
-        "required": ["container_name", "storage_account_name", "storage_account_access_key", "data_source_type", "subdirectories"]
+        "required": [
+            "container_name",
+            "storage_account_name",
+            "storage_account_access_key",
+            "data_source_type",
+            "subdirectories"
+        ]
     }
 }
 
@@ -50,6 +47,7 @@ TABLE_SCHEMA = [
     {"name": "load_timestamp", "type": "timestamp"},
 ]
 
+
 def validate_json_config(config_data, schema, config_type="Configuration"):
     try:
         jsonschema.validate(instance=config_data, schema=schema)
@@ -57,6 +55,7 @@ def validate_json_config(config_data, schema, config_type="Configuration"):
     except jsonschema.exceptions.ValidationError as ve:
         logger.error(f"{config_type} validation failed: {ve.message}")
         raise
+
 
 def get_config(dbutils) -> Dict[str, Any]:
     try:
@@ -66,33 +65,46 @@ def get_config(dbutils) -> Dict[str, Any]:
         checkpoint_path = dbutils.widgets.get("CHECKPOINT_PATH")
         data_config_file = dbutils.widgets.get("DATA_CONFIG_FILE_PATH")
         system_config_file = dbutils.widgets.get("SYSTEM_CONFIG_FILE_PATH")
-        
+
         # Determine absolute paths
         current_dir = os.path.dirname(__file__)
         data_config_path = os.path.join(current_dir, data_config_file)
         system_config_path = os.path.join(current_dir, system_config_file)
-        
+
         # Load data mount points
         with open(data_config_path, 'r') as file:
             data_mount_points = json.load(file)
-        
+
         # Load system mount points
         with open(system_config_path, 'r') as file:
             system_mount_points = json.load(file)
-        
+
         # Combine mount points
         all_mount_points = data_mount_points + system_mount_points
 
         # Validate the combined mount points
-        validate_json_config(all_mount_points, MOUNT_POINTS_SCHEMA, config_type="Mount Points")
-        
+        validate_json_config(
+            all_mount_points, MOUNT_POINTS_SCHEMA, config_type="Mount Points"
+        )
+
         # Replace placeholders with secrets
-        storage_account_access_key = dbutils.secrets.get(scope="my-secret-scope", key="storage-access-key")
+        storage_account_access_key = dbutils.secrets.get(
+            scope="my-secret-scope", key="storage-access-key"
+        )
         for mount in all_mount_points:
-            if "storage_account_access_key" in mount and mount["storage_account_access_key"] == "${STORAGE_ACCOUNT_ACCESS_KEY}":
-                mount["storage_account_access_key"] = storage_account_access_key
-                logger.info(f"Replaced storage_account_access_key for container '{mount['container_name']}'")
-        
+            if (
+                "storage_account_access_key" in mount
+                and mount["storage_account_access_key"]
+                == "${STORAGE_ACCOUNT_ACCESS_KEY}"
+            ):
+                mount["storage_account_access_key"] = (
+                    storage_account_access_key
+                )
+                logger.info(
+                    f"Replaced storage_account_access_key for container "
+                    f"'{mount['container_name']}'"
+                )
+
         config = {
             "checkpoint_path": checkpoint_path,
             "mount_points": all_mount_points,
@@ -106,7 +118,7 @@ def get_config(dbutils) -> Dict[str, Any]:
                 }
             }
         }
-        
+
         logger.info("Configuration successfully retrieved and parsed.")
         return config
     except Exception as e:
