@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { formatSelectionsForQuery } from '@/lib/formatSelections';
+import fs from 'fs/promises'; // Use promises for async file read
+import path from 'path';
 
 interface VectorSearchResponse {
   manifest: {
@@ -12,16 +14,27 @@ interface VectorSearchResponse {
   };
 }
 
-const BASE_PROMPT = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
+const SYSTEM_PROMPT_PATH = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
+let SYSTEM_PROMPT = '';
+
+// Asynchronously read the system prompt file when the server starts
+async function loadSystemPrompt() {
+  if (SYSTEM_PROMPT_PATH) {
+    try {
+      SYSTEM_PROMPT = await fs.readFile(SYSTEM_PROMPT_PATH, 'utf-8');
+    } catch (error) {
+      console.error(`Failed to read the system prompt file: ${(error as Error).message}`);
+    }
+  }
+}
+
+// Load the system prompt at startup
+loadSystemPrompt();
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Parse Body
-    // We expect the front end to send either:
-    //   { userSelections, oauthToken, previousMessages }
-    // or 
-    //   { query, oauthToken, previousMessages }
-    const { query, userSelections, oauthToken, previousMessages = [] } = await req.json();
+    const { query, userSelections, oauthToken } = await req.json();
 
     // 2. Validate OAuth token
     if (!oauthToken) {
@@ -86,9 +99,8 @@ export async function POST(req: NextRequest) {
           messages: [
             {
               role: 'system',
-              content: `${BASE_PROMPT}\n\n${relevantContext}`,
+              content: `${SYSTEM_PROMPT}\n\n${relevantContext}`,
             },
-            ...previousMessages,
             {
               role: 'user',
               content: finalQuery,
@@ -117,6 +129,9 @@ export async function POST(req: NextRequest) {
         row_count: 1,
         data_array: [[assistantResponse, 1.0]],
       },
+      finalQuery,
+      relevantContext,
+      systemPrompt: SYSTEM_PROMPT,
     });
 
   } catch (error) {
@@ -124,7 +139,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to process request',
-        details: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: (error as Error).message || 'Unknown error occurred',
       },
       { status: 500 }
     );

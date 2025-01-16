@@ -8,8 +8,6 @@ export async function sendUserSelectionsToRAG(
         // Convert userSelections to a single text query
         const query = formatSelectionsForQuery(userSelections);
 
-        const previousMessages: any[] = []; 
-
         const response = await fetch("/api/chat", {
             method: "POST",
             headers: {
@@ -17,8 +15,7 @@ export async function sendUserSelectionsToRAG(
             },
             body: JSON.stringify({
                 query,          // The text from userSelections
-                oauthToken,
-                previousMessages,
+                oauthToken
             }),
         });
 
