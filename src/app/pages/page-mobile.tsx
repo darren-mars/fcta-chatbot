@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
 import Header from '../components/Header';
 import { Stepper } from '../components/Stepper';
 import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
 import Accommodation from '../pages/Accomodation';
 import Activities from '../pages/Activities';
+import TinderSwiper from '@/app/components/TinderSwiper';
 import { UserSelections, Selection } from '@/types';
+import PlaneTicket from '../components/PlaneTicket';
 
 const steps = [Vibe, Season, Accommodation, Activities];
 
 function StepflowFctaMobile() {
+  const steps = [Vibe, Season, Accommodation, Activities];
+  const totalSteps = steps.length;
+
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [userSelections, setUserSelections] = useState<UserSelections>({
     vibes: [],
@@ -21,6 +27,13 @@ function StepflowFctaMobile() {
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [showFinalJSON, setShowFinalJSON] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [requestsLog, setRequestsLog] = useState<{databricks: string, llama: string, response: string}>({
+    databricks: '',
+    llama: '',
+    response: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showJsonView, setShowJsonView] = useState<boolean>(false); // Toggle state
 
   const CurrentStepComponent = steps[currentStep - 1] as React.FC<{
     onSelect: (selection: Selection) => void;
@@ -56,8 +69,15 @@ function StepflowFctaMobile() {
   const handleFreeTextChange = (text: string) => {
     setUserSelections((prev: UserSelections) => {
       const updatedSelections = [...prev[currentStepKey]];
-      const lastSelection = updatedSelections[updatedSelections.length - 1];
-      lastSelection.freeText = text;
+      if (updatedSelections.length === 0) {
+        // If there are no selections, add a new selection with just the free text
+        updatedSelections.push({ type: 'FreeText', freeText: text });
+      } else {
+        const lastSelection = updatedSelections[updatedSelections.length - 1];
+        if (lastSelection) {
+          lastSelection.freeText = text;
+        }
+      }
       return { ...prev, [currentStepKey]: updatedSelections };
     });
   };
@@ -65,16 +85,34 @@ function StepflowFctaMobile() {
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
+      setCurrentKeywords([]); // Reset current keywords to hide TinderSwiper
     } else {
       setShowFinalJSON(true);
+      setIsLoading(true);
 
-      // Prepare the JSON structure as required
+      // Prepare the JSON structure 
       const formattedSelections = {
         userSelections: {
-          vibes: userSelections.vibes,
-          season: userSelections.season,
-          accommodation: userSelections.accommodation,
-          activities: userSelections.activities,
+          vibes: userSelections.vibes.map(v => ({
+            category: v.type,
+            keywords: v.selectedKeywords,
+            notes: v.freeText || undefined
+          })),
+          season: userSelections.season.map(s => ({
+            category: s.type,
+            keywords: s.selectedKeywords,
+            notes: s.freeText || undefined
+          })),
+          accommodation: userSelections.accommodation.map(a => ({
+            category: a.type,
+            keywords: a.selectedKeywords,
+            notes: a.freeText || undefined
+          })),
+          activities: userSelections.activities.map(a => ({
+            category: a.type,
+            keywords: a.selectedKeywords,
+            notes: a.freeText || undefined
+          })),
         }
       };
 
@@ -83,6 +121,7 @@ function StepflowFctaMobile() {
 
       if (!oauthToken) {
         setError('OAuth token is missing. Please log in.');
+        setIsLoading(false);
         return;
       }
 
@@ -106,75 +145,163 @@ function StepflowFctaMobile() {
         const responseData = await response.json();
         console.log('AI API Response:', responseData);
 
+        const { finalQuery, relevantContext, systemPrompt } = responseData;
+
+        // Log the request to Databricks
+        const databricksRequest = {
+          num_results: 3,
+          columns: ['content_chunk'],
+          query_text: finalQuery,
+        };
+
+        setRequestsLog({
+          databricks: JSON.stringify(databricksRequest, null, 2),
+          llama: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content: `${systemPrompt}\n\n${relevantContext}`,
+              },
+              {
+                role: 'user',
+                content: finalQuery,
+              },
+            ]
+          }, null, 2),
+          response: JSON.stringify(responseData.result.data_array[0][0], null, 2)
+        });
+
         // Extract the assistant's response from the API response
         const assistantResponse = responseData.result.data_array[0][0];
         setAiResponse(assistantResponse);
-
       } catch (error) {
         console.error('Error in fetching AI response:', error);
         setError('Failed to fetch AI response. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
-  useEffect(() => {
-    setCurrentKeywords([]);
-  }, [currentStep, userSelections]);
-
   return (
-    <div className="flex flex-col h-screen bg-white overflow-hidden">
-      <div className="flex-none p-4">
-        {/* <Header /> */}
+    <div className="flex flex-col h-screen bg-white p-4 overflow-hidden">
+      {/* Toggle Switch */}
+      <div className="flex justify-center mb-4">
+        <input
+          type="checkbox"
+          className="toggle"
+          checked={showJsonView}
+          onChange={() => setShowJsonView(!showJsonView)}
+        />
+        <span className="ml-2 text-lg">Show JSON View</span>
       </div>
-      <div className="flex-none px-4 mb-4">
-        <Stepper currentStep={currentStep} totalSteps={steps.length} />
-      </div>
-      <div className="flex-grow flex flex-col items-center px-4 pb-4">
-        <div className="w-full max-w-md">
+  
+      {showJsonView ? (
+        // JSON View
+        <div className="flex flex-col space-y-4 overflow-y-auto">
+          <div className="flex flex-col p-4">
+            <h2 className="text-xl font-bold mb-4">User Selections ➡️</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
+              {JSON.stringify(userSelections, null, 2)}
+            </pre>
+          </div>
+          <div className="flex flex-col p-4">
+            <h2 className="text-xl font-bold mb-4">Databricks Request</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
+              {requestsLog.databricks}
+            </pre>
+          </div>
+          <div className="flex flex-col p-4">
+            <h2 className="text-xl font-bold mb-4">Databricks Response</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
+              {requestsLog.llama}
+            </pre>
+          </div>
+          <div className="flex flex-col p-4">
+            <h2 className="text-xl font-bold mb-4">Generated Itinerary</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
+              {JSON.stringify(aiResponse, null, 2)}
+            </pre>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-4">
           {showFinalJSON ? (
             // Final JSON and AI Response Display
             <div className="w-full flex flex-col items-center justify-center">
-              <h2 className="text-3xl font-bold text-purple-800 mb-4">Your Trip Preferences ✨</h2>
-              <div className="flex space-x-4">
-                <pre className="bg-gray-100 p-6 rounded-lg text-left max-w-3xl overflow-x-auto shadow-md">
-                  {JSON.stringify(userSelections, null, 2)}
-                </pre>
-                <pre className="bg-gray-100 p-6 rounded-lg text-left max-w-3xl overflow-x-auto shadow-md">
-                  {aiResponse || 'Fetching AI response...'}
-                </pre>
+              <div className="flex space-x-4 w-full">
+                <div className="flex space-x-4 w-full">
+                  <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
+                </div>
               </div>
               {error && <div className="text-red-500 mt-4">{error}</div>}
               <button
-                className="mt-6 px-6 py-3 rounded-full bg-purple-600 text-white font-medium"
+                className="mt-6 px-6 py-3 rounded-full bg-purple-900 text-white font-medium"
                 onClick={() => {
                   setCurrentStep(1);
                   setShowFinalJSON(false);
                   setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
                   setAiResponse(null);
                   setError(null);
+                  setRequestsLog({databricks: '', llama: '', response: ''}); // Clear requests log
                 }}
               >
-                Start Over 🔄
+                Start Over
               </button>
             </div>
           ) : (
-            <CurrentStepComponent
-              onSelect={handleTypeSelect}
-              selections={userSelections[currentStepKey]}
-              onFreeTextChange={handleFreeTextChange}
-              setKeywords={(keywords) => {
-                setCurrentKeywords(keywords);
-              }}
-            />
+            <>
+              <div className="flex flex-col items-center justify-center">
+                {/* Swiper */}
+                {currentKeywords.length > 0 && (
+                  <div className="w-full mb-4">
+                    <div className="border-1 rounded-xl p-4 h-full w-full flex flex-col">
+                      <div className="flex-1 flex flex-col items-center justify-center">
+                        <div className="w-full h-auto max-w-sm">
+                          <TinderSwiper
+                            cards={currentKeywords}
+                            onSwipe={handleKeywordSwipe}
+                            onFinish={() => setCurrentKeywords([])}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+  
+                {/* Questions */}
+                <div className="w-full">
+                  <div className="border-2 border-gray-200 rounded-xl p-4 h-full flex flex-col justify-center items-center text-center">
+                    <Header />
+                    <Stepper currentStep={currentStep} totalSteps={totalSteps} />
+                    <div className="mt-4 w-full flex flex-col items-center">
+                      <CurrentStepComponent
+                        onSelect={handleTypeSelect}
+                        selections={userSelections[currentStepKey]}
+                        onFreeTextChange={handleFreeTextChange}
+                        setKeywords={(keywords) => {
+                          setCurrentKeywords(keywords);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* Continue button */}
+                  {!showFinalJSON && (
+                    <div className="flex justify-center mt-4">
+                      <button
+                        className="px-6 py-3 bg-[#3d144d] text-white rounded-full font-medium"
+                        onClick={handleNextStep}
+                      >
+                        {currentStep === totalSteps ? 'Create' : 'Continue'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
           )}
-          <button
-            className="px-6 py-2 rounded-full bg-purple-600 text-white mt-4"
-            onClick={handleNextStep}
-          >
-            {currentStep === steps.length ? "Create ✨" : "Continue"}
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

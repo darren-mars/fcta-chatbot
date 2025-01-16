@@ -9,7 +9,7 @@ import Activities from '../pages/Activities';
 import TinderSwiper from '@/app/components/TinderSwiper';
 import { UserSelections, Selection } from '@/types';
 import PlaneTicket from '../components/PlaneTicket';
-import { LayoutGrid } from "../components/LayoutGrid";
+// import { LayoutGrid } from "../components/LayoutGrid";
 
 const steps = [Vibe, Season, Accommodation, Activities];
 
@@ -334,7 +334,7 @@ function StepflowFctaWeb() {
                 {/* Left side - Swiper */}
                 <div className="w-1/2 pr-4">
                   <div className="border-1 rounded-xl p-6 h-full w-full flex flex-col">
-                    {currentKeywords.length > 0 ? (
+                    {currentKeywords.length > 0 && (
                       <div className="flex-1 flex flex-col items-center justify-center">
                         <div className="w-full h-1/2 max-w-xl">
                           <TinderSwiper
@@ -343,10 +343,6 @@ function StepflowFctaWeb() {
                             onFinish={() => setCurrentKeywords([])}
                           />
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex flex-col items-center justify-center">
-                        <LayoutGrid cards={cards} />
                       </div>
                     )}
                   </div>
