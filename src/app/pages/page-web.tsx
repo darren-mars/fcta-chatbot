@@ -1,7 +1,5 @@
-"use client";
-
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
 import Header from '../components/Header';
 import { Stepper } from '../components/Stepper';
 import Vibe from '../pages/Vibe';
@@ -391,6 +389,6 @@ function StepflowFctaWeb() {
       )}
     </div>
   );
-} // <== Missing closing bracket added here
+}
 
 export default StepflowFctaWeb;
