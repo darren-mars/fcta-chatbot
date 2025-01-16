@@ -272,7 +272,6 @@ function StepflowFctaWeb() {
           checked={showJsonView}
           onChange={() => setShowJsonView(!showJsonView)}
         />
-        <span className="ml-2 text-lg">Show JSON View</span>
       </div>
   
       {showJsonView ? (

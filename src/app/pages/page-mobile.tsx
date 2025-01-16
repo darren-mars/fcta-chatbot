@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
 import Header from '../components/Header';
 import { Stepper } from '../components/Stepper';
@@ -9,12 +9,22 @@ import Activities from '../pages/Activities';
 import TinderSwiper from '@/app/components/TinderSwiper';
 import { UserSelections, Selection } from '@/types';
 import PlaneTicket from '../components/PlaneTicket';
+import GlowingButton from '../components/GlowingButton'; // Import GlowingButton component
 
 const steps = [Vibe, Season, Accommodation, Activities];
+
+const vibeKeywords = {
+  "Relaxing": ["Beach Retreat", "Spa Day", "Mountain Getaway", "Yoga Retreat"],
+  "Adventurous": ["Safari Adventure", "Jungle Trekking", "Skydiving", "Mountain Climbing"],
+  "Cultural": ["Historical Tours", "Local Festivals", "Art Galleries", "Food Tours"],
+  "Romantic": ["Sunset Cruises", "Candlelit Dinners", "Couples Spa", "Scenic Walks"],
+  "Nature-Immersive": ["National Parks", "Wildlife Watching", "Camping", "Eco-Lodges"],
+};
 
 function StepflowFctaMobile() {
   const steps = [Vibe, Season, Accommodation, Activities];
   const totalSteps = steps.length;
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [userSelections, setUserSelections] = useState<UserSelections>({
@@ -33,7 +43,7 @@ function StepflowFctaMobile() {
     response: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showJsonView, setShowJsonView] = useState<boolean>(false); // Toggle state
+  const [showFreeText, setShowFreeText] = useState<boolean>(false); // State for showing free text input
 
   const CurrentStepComponent = steps[currentStep - 1] as React.FC<{
     onSelect: (selection: Selection) => void;
@@ -49,7 +59,22 @@ function StepflowFctaMobile() {
       updatedSelections.push(selection);
       return { ...prev, [currentStepKey]: updatedSelections };
     });
+
+    // Set keywords to trigger TinderSwiper rendering
+    setCurrentKeywords(vibeKeywords[selection.type as keyof typeof vibeKeywords]);
+
+    // Scroll to the bottom
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
+
+  useEffect(() => {
+    // Scroll to the bottom after currentKeywords is updated
+    if (currentKeywords.length > 0 && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentKeywords]);
 
   const handleKeywordSwipe = (keyword: string, direction: 'left' | 'right') => {
     if (direction === 'right') {
@@ -70,7 +95,6 @@ function StepflowFctaMobile() {
     setUserSelections((prev: UserSelections) => {
       const updatedSelections = [...prev[currentStepKey]];
       if (updatedSelections.length === 0) {
-        // If there are no selections, add a new selection with just the free text
         updatedSelections.push({ type: 'FreeText', freeText: text });
       } else {
         const lastSelection = updatedSelections[updatedSelections.length - 1];
@@ -90,7 +114,6 @@ function StepflowFctaMobile() {
       setShowFinalJSON(true);
       setIsLoading(true);
 
-      // Prepare the JSON structure 
       const formattedSelections = {
         userSelections: {
           vibes: userSelections.vibes.map(v => ({
@@ -116,7 +139,6 @@ function StepflowFctaMobile() {
         }
       };
 
-      // Retrieve the OAuth token
       const oauthToken = process.env.NEXT_PUBLIC_OAUTH_TOKEN || "dapi0ec22d874c1b479080fac1afc5088e97"; // Replace with actual token retrieval logic
 
       if (!oauthToken) {
@@ -125,7 +147,6 @@ function StepflowFctaMobile() {
         return;
       }
 
-      // Call the API with userSelections
       try {
         const response = await fetch('/api/chat', {
           method: 'POST',
@@ -147,7 +168,6 @@ function StepflowFctaMobile() {
 
         const { finalQuery, relevantContext, systemPrompt } = responseData;
 
-        // Log the request to Databricks
         const databricksRequest = {
           num_results: 3,
           columns: ['content_chunk'],
@@ -171,7 +191,6 @@ function StepflowFctaMobile() {
           response: JSON.stringify(responseData.result.data_array[0][0], null, 2)
         });
 
-        // Extract the assistant's response from the API response
         const assistantResponse = responseData.result.data_array[0][0];
         setAiResponse(assistantResponse);
       } catch (error) {
@@ -185,121 +204,53 @@ function StepflowFctaMobile() {
 
   return (
     <div className="flex flex-col h-screen bg-white p-4 overflow-hidden">
-      {/* Toggle Switch */}
-      <div className="flex justify-center mb-4">
-        <input
-          type="checkbox"
-          className="toggle"
-          checked={showJsonView}
-          onChange={() => setShowJsonView(!showJsonView)}
-        />
-        <span className="ml-2 text-lg">Show JSON View</span>
-      </div>
-  
-      {showJsonView ? (
-        // JSON View
-        <div className="flex flex-col space-y-4 overflow-y-auto">
-          <div className="flex flex-col p-4">
-            <h2 className="text-xl font-bold mb-4">User Selections ➡️</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
-              {JSON.stringify(userSelections, null, 2)}
-            </pre>
-          </div>
-          <div className="flex flex-col p-4">
-            <h2 className="text-xl font-bold mb-4">Databricks Request</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
-              {requestsLog.databricks}
-            </pre>
-          </div>
-          <div className="flex flex-col p-4">
-            <h2 className="text-xl font-bold mb-4">Databricks Response</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
-              {requestsLog.llama}
-            </pre>
-          </div>
-          <div className="flex flex-col p-4">
-            <h2 className="text-xl font-bold mb-4">Generated Itinerary</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
-              {JSON.stringify(aiResponse, null, 2)}
-            </pre>
-          </div>
-        </div>
+      {showFinalJSON ? (
+        <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
       ) : (
-        <div className="flex flex-col space-y-4">
-          {showFinalJSON ? (
-            // Final JSON and AI Response Display
-            <div className="w-full flex flex-col items-center justify-center">
-              <div className="flex space-x-4 w-full">
-                <div className="flex space-x-4 w-full">
-                  <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
+        <div className="flex flex-col h-full overflow-y-auto">
+          <Header />
+          <Stepper currentStep={currentStep} totalSteps={totalSteps} />
+          <div className="flex-1 flex flex-col items-center">
+            <div className="w-full flex-1">
+              <div className="border-2 border-gray-200 rounded-xl p-4 h-full flex flex-col justify-center items-center text-center">
+                <div className="mt-4 w-full flex flex-col items-center">
+                  <CurrentStepComponent
+                    onSelect={handleTypeSelect}
+                    selections={userSelections[currentStepKey]}
+                    onFreeTextChange={handleFreeTextChange}
+                    setKeywords={(keywords) => setCurrentKeywords(keywords)}
+                  />
                 </div>
               </div>
-              {error && <div className="text-red-500 mt-4">{error}</div>}
-              <button
-                className="mt-6 px-6 py-3 rounded-full bg-purple-900 text-white font-medium"
-                onClick={() => {
-                  setCurrentStep(1);
-                  setShowFinalJSON(false);
-                  setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
-                  setAiResponse(null);
-                  setError(null);
-                  setRequestsLog({databricks: '', llama: '', response: ''}); // Clear requests log
-                }}
-              >
-                Start Over
-              </button>
             </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center justify-center">
-                {/* Swiper */}
-                {currentKeywords.length > 0 && (
-                  <div className="w-full mb-4">
-                    <div className="border-1 rounded-xl p-4 h-full w-full flex flex-col">
-                      <div className="flex-1 flex flex-col items-center justify-center">
-                        <div className="w-full h-auto max-w-sm">
-                          <TinderSwiper
-                            cards={currentKeywords}
-                            onSwipe={handleKeywordSwipe}
-                            onFinish={() => setCurrentKeywords([])}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-  
-                {/* Questions */}
-                <div className="w-full">
-                  <div className="border-2 border-gray-200 rounded-xl p-4 h-full flex flex-col justify-center items-center text-center">
-                    <Header />
-                    <Stepper currentStep={currentStep} totalSteps={totalSteps} />
-                    <div className="mt-4 w-full flex flex-col items-center">
-                      <CurrentStepComponent
-                        onSelect={handleTypeSelect}
-                        selections={userSelections[currentStepKey]}
-                        onFreeTextChange={handleFreeTextChange}
-                        setKeywords={(keywords) => {
-                          setCurrentKeywords(keywords);
-                        }}
+
+            {currentKeywords.length > 0 && (
+              <div className="w-full mb-4 flex-none">
+                <div className="border-1 rounded-xl p-4 h-full w-full flex flex-col">
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <div className="w-full h-auto max-w-sm">
+                      <TinderSwiper
+                        cards={currentKeywords}
+                        onSwipe={handleKeywordSwipe}
+                        onFinish={() => setCurrentKeywords([])}
                       />
                     </div>
                   </div>
-                  {/* Continue button */}
-                  {!showFinalJSON && (
-                    <div className="flex justify-center mt-4">
-                      <button
-                        className="px-6 py-3 bg-[#3d144d] text-white rounded-full font-medium"
-                        onClick={handleNextStep}
-                      >
-                        {currentStep === totalSteps ? 'Create' : 'Continue'}
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
-            </>
-          )}
+            )}
+
+            <div className="flex justify-center mt-4 mb-4">
+              <button
+                className="px-6 py-3 bg-[#3d144d] text-white rounded-full font-medium"
+                onClick={handleNextStep}
+              >
+                {currentStep === totalSteps ? 'Create' : 'Continue'}
+              </button>
+            </div>
+
+            <div ref={bottomRef}></div>
+          </div>
         </div>
       )}
     </div>

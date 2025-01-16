@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import PillButton from "@/app/components/PillButton";
-import TinderSwiper from "@/app/components/TinderSwiper";
+
 import GlowingButton from '@/app/components/GlowingButton';
 interface Selection {
   type: string;
@@ -102,17 +102,6 @@ const Vibe: React.FC<VibeProps> = ({ onSelect, selections, onFreeTextChange, set
           </PillButton>
         ))}
       </div>
-
-      {selectedType && (
-        <div className="flex flex-col items-center mt-8 w-full md:hidden">
-          <TinderSwiper
-            cards={vibeKeywords[selectedType]}
-            onSwipe={handleKeywordSwipe}
-            onFinish={() => console.log("Swiping finished")}
-          />
-        </div>
-      )}
-      
       <div className="w-full flex justify-center mt-4">
       <GlowingButton 
   onClick={() => setShowFreeText(!showFreeText)} 
@@ -123,15 +112,18 @@ const Vibe: React.FC<VibeProps> = ({ onSelect, selections, onFreeTextChange, set
 
 
 
+
       {showFreeText && (
         <div className="w-full mt-4 ">
+          
           <input
             type="text"
             value={freeText}
             onChange={handleFreeTextChange}
             placeholder="Describe your experience"
-            className="w-full py-3 px-4 border border-purple-600 text-purple-600 rounded-full"
+            className="w-full py-3 px-4 border text-purple-600 rounded-full"
           />
+          
         </div>
       )}
     </div>

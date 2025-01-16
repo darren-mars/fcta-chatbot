@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import PillButton from "@/app/components/PillButton";
-import TinderSwiper from "@/app/components/TinderSwiper";
 import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
 import { Selection } from "@/types";
 
@@ -90,16 +89,6 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
           </PillButton>
         ))}
       </div>
-
-      {selectedType && (
-        <div className="flex flex-col items-center mt-8 w-full md:hidden">
-          <TinderSwiper
-            cards={activityKeywords[selectedType]}
-            onSwipe={handleKeywordSwipe}
-            onFinish={() => console.log("Swiping finished")}
-          />
-        </div>
-      )}
 
       <div className="w-full flex justify-center mt-4">
       <GlowingButton 
