@@ -29,10 +29,15 @@ const Accommodation: React.FC<AccommodationProps> = ({ onSelect, selections, onF
   const [freeText, setFreeText] = useState("");
 
   const handleTypeSelect = (type: AccommodationType) => {
-    setSelectedType(type);
-    setSelectedKeywords([]);
-    onSelect({ type, selectedKeywords: [], freeText: "" });
-    setKeywords(accommodationKeywords[type]);
+    if (selectedType === type) {
+      setSelectedType(null); // Deselect type
+      setKeywords([]); // Clear keywords when type is deselected
+    } else {
+      setSelectedType(type);
+      setSelectedKeywords([]);
+      onSelect({ type, selectedKeywords: [], freeText: "" });
+      setKeywords(accommodationKeywords[type]); // Pass keywords to page-mobile
+    }
   };
 
   const handleKeywordSwipe = (keyword: string, direction: 'left' | 'right') => {

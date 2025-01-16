@@ -42,10 +42,15 @@ const Vibe: React.FC<VibeProps> = ({ onSelect, selections, onFreeTextChange, set
   const [freeText, setFreeText] = useState("");
 
   const handleTypeSelect = (type: VibeType) => {
-    setSelectedType(type);
-    setSelectedKeywords([]);
-    onSelect({ type, selectedKeywords: [], freeText: "" });
-    setKeywords(vibeKeywords[type]); // pass keywords to page-mobile
+    if (selectedType === type) {
+      setSelectedType(null); // Deselect type
+      setKeywords([]); // Clear keywords when type is deselected
+    } else {
+      setSelectedType(type);
+      setSelectedKeywords([]);
+      onSelect({ type, selectedKeywords: [], freeText: "" });
+      setKeywords(vibeKeywords[type]); // Pass keywords to page-mobile
+    }
   };
 
   const handleKeywordSwipe = (keyword: string, direction: 'left' | 'right') => {

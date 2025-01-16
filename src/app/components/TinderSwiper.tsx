@@ -108,7 +108,6 @@ export default TinderSwiper;
 
 
 
-
 const keywordImageMap: { [key: string]: string } = {
   // Vibe keywords
   "Beach Retreat": "beach_retreat.png",
@@ -117,7 +116,7 @@ const keywordImageMap: { [key: string]: string } = {
   "Yoga Retreat": "yoga_retreat.png",
   "Safari Adventure": "safari.png",
   "Jungle Trekking": "jungle_trekking.png",
-  "Skydiving": "skydiving.png",
+  "Skydiving": "sky_diving.png",
   "Mountain Climbing": "mountain_climbing.png",
   "Historical Tours": "historical_tours.png",
   "Local Festivals": "local_festivals.png",
@@ -130,7 +129,7 @@ const keywordImageMap: { [key: string]: string } = {
   "National Parks": "national_parks.png",
   "Wildlife Watching": "wildlife_watching.png",
   "Camping": "camping.png",
-  "Eco-Lodges": "eco_lodges.png",
+  "Eco-Lodges": "eco-lodges.png",
 
   // Season keywords
   "Cherry Blossoms": "cherry_blossoms.png",
@@ -168,7 +167,7 @@ const keywordImageMap: { [key: string]: string } = {
   "Fine Dining": "fine_dining.png",
   "Breweries": "breweries.png",
   "Beach Lounging": "beach_lounging.png",
-  "Yoga Retreats": "yoga_retreats.png",
+  "Yoga Retreats": "yoga_retreat.png",
   "Nature Walks": "nature_walks.png",
 
   // Accommodation keywords
@@ -184,12 +183,12 @@ const keywordImageMap: { [key: string]: string } = {
   "Villas": "villas.png",
   "Cabins": "cabins.png",
   "Condos": "condos.png",
-  "Artistic": "artistic_hotel.png",
-  "Historic": "historic_hotel.png",
-  "Modern": "modern_hotel.png",
-  "Quirky": "quirky_hotel.png",
+  "Artistic": "artistic.png",
+  "Historic": "historic.png",
+  "Modern": "modern.png",
+  "Quirky": "quirky.png",
   "Glamping": "glamping.png",
   "Tent Camping": "tent_camping.png",
   "RV Camping": "rv_camping.png",
-  "Backcountry": "backcountry_camping.png",
+  "Backcountry": "backcountry.png",
 };

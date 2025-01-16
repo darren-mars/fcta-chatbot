@@ -29,10 +29,15 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
   const [freeText, setFreeText] = useState("");
 
   const handleTypeSelect = (type: ActivityType) => {
-    setSelectedType(type);
-    setSelectedKeywords([]);
-    onSelect({ type, selectedKeywords: [], freeText: "" });
-    setKeywords(activityKeywords[type]);
+    if (selectedType === type) {
+      setSelectedType(null); // Deselect type
+      setKeywords([]); // Clear keywords when type is deselected
+    } else {
+      setSelectedType(type);
+      setSelectedKeywords([]);
+      onSelect({ type, selectedKeywords: [], freeText: "" });
+      setKeywords(activityKeywords[type]); // Pass keywords to page-mobile
+    }
   };
 
   const handleKeywordSwipe = (keyword: string, direction: 'left' | 'right') => {

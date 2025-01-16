@@ -9,6 +9,7 @@ import Accommodation from '../pages/Accomodation';
 import Activities from '../pages/Activities';
 import TinderSwiper from '@/app/components/TinderSwiper';
 import { UserSelections, Selection } from '@/types';
+import PlaneTicket from '../components/PlaneTicket';
 
 const steps = [Vibe, Season, Accommodation, Activities];
 
@@ -25,7 +26,7 @@ function StepflowFctaWeb() {
   const [showFinalJSON, setShowFinalJSON] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [requestsLog, setRequestsLog] = useState<string>("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const CurrentStepComponent = steps[currentStep - 1] as React.FC<{
     onSelect: (selection: Selection) => void;
     selections: Selection[];
@@ -69,10 +70,11 @@ function StepflowFctaWeb() {
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
+      setCurrentKeywords([]); // Reset current keywords to hide TinderSwiper
     } else {
       setShowFinalJSON(true);
 
-      // Prepare the JSON structure as required
+      // Prepare the JSON structure 
       const formattedSelections = {
         userSelections: {
           vibes: userSelections.vibes.map(v => ({
@@ -152,87 +154,89 @@ function StepflowFctaWeb() {
 
         // Extract the assistant's response from the API response
         const assistantResponse = responseData.result.data_array[0][0];
+        setIsLoading(true);
         setAiResponse(assistantResponse);
-
       } catch (error) {
         console.error('Error in fetching AI response:', error);
         setError('Failed to fetch AI response. Please try again later.');
+        setIsLoading(false);
       }
     }
   };
 
   return (
-    <div className="flex h-screen bg-white p-8 overflow-hidden">
-      {showFinalJSON ? (
-        // Final JSON and AI Response Display
-        <div className="w-full flex flex-col items-center justify-center">
-          <h2 className="text-3xl font-bold text-purple-800 mb-4">Your Trip Preferences ✨</h2>
-          <div className="flex space-x-4">
-            <pre className="bg-gray-100 p-6 rounded-lg text-left max-w-3xl overflow-x-auto shadow-md">
-              {requestsLog}
-            </pre>
-            <pre className="bg-gray-100 p-6 rounded-lg text-left max-w-3xl overflow-x-auto shadow-md">
-              {aiResponse || 'Fetching AI response...'}
-            </pre>
-          </div>
-          {error && <div className="text-red-500 mt-4">{error}</div>}
-          <button
-            className="mt-6 px-6 py-3 rounded-full bg-purple-600 text-white font-medium"
-            onClick={() => {
-              setCurrentStep(1);
-              setShowFinalJSON(false);
-              setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
-              setAiResponse(null);
-              setError(null);
-              setRequestsLog(""); // Clear requests log
-            }}
-          >
-            Start Over 🔄
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Left side - Swiper */}
-          <div className="w-1/2 pr-4">
-            <div className="border-2 border-gray-200 rounded-xl p-6 h-full w-full flex flex-col">
-              {currentKeywords.length > 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <div className="w-full h-full max-w-xl">
-                    <TinderSwiper
-                      cards={currentKeywords}
-                      onSwipe={handleKeywordSwipe}
-                      onFinish={() => console.log("Swiping finished")}
-                    />
-                  </div>
-                </div>
-              )}
+    <div className="flex flex-col h-screen bg-white p-8 overflow-hidden">  
+      <div className="flex flex-1">
+        {showFinalJSON ? (
+          // Final JSON and AI Response Display
+          <div className="w-full flex flex-col items-center justify-center">
+            <h2 className="text-3xl font-bold text-purple-800 mb-4">Your Trip Preferences ✨</h2>
+            <div className="flex space-x-4 w-full">
+              <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
             </div>
+            {error && <div className="text-red-500 mt-4">{error}</div>}
+            <button
+              className="mt-6 px-6 py-3 rounded-full bg-purple-600 text-white font-medium"
+              onClick={() => {
+                setCurrentStep(1);
+                setShowFinalJSON(false);
+                setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
+                setAiResponse(null);
+                setError(null);
+                setRequestsLog(""); // Clear requests log
+              }}
+            >
+              Start Over 🔄
+            </button>
           </div>
-
-          {/* Right side - Questions */}
-          <div className="w-1/2 pl-4">
-            <div className="border-2 border-gray-200 rounded-xl p-6 h-full">
-              <Header />
-              <Stepper currentStep={currentStep} totalSteps={steps.length} />
-              <div className="mt-8">
-                <CurrentStepComponent
-                  onSelect={handleTypeSelect}
-                  selections={userSelections[currentStepKey]}
-                  onFreeTextChange={handleFreeTextChange}
-                  setKeywords={(keywords) => {
-                    setCurrentKeywords(keywords);
-                  }}
-                />
-                <button
-                  className="px-6 py-2 rounded-full bg-purple-600 text-white mt-4"
-                  onClick={handleNextStep}
-                >
-                  {currentStep === steps.length ? "Create ✨" : "Continue"}
-                </button>
+        ) : (
+          <>
+            {/* Left side - Swiper */}
+            <div className="w-1/2 pr-4">
+              <div className="border-2 border-gray-200 rounded-xl p-6 h-full w-full flex flex-col">
+                {currentKeywords.length > 0 && (
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <div className="w-full h-full max-w-xl">
+                      <TinderSwiper
+                        cards={currentKeywords}
+                        onSwipe={handleKeywordSwipe}
+                        onFinish={() => console.log("Swiping finished")}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </>
+            {/* Right side - Questions */}
+            <div className="w-1/2 pl-4">
+              <div className="border-2 border-gray-200 rounded-xl p-6 h-full">
+                <Header />
+                <Stepper currentStep={currentStep} totalSteps={steps.length} />
+                <div className="mt-8">
+                  <CurrentStepComponent
+                    onSelect={handleTypeSelect}
+                    selections={userSelections[currentStepKey]}
+                    onFreeTextChange={handleFreeTextChange}
+                    setKeywords={(keywords) => {
+                      setCurrentKeywords(keywords);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      {/* Continue button */}
+      {!showFinalJSON && (
+        <div className="flex justify-center mt-8">
+          <button
+            className="px-6 py-3 bg-purple-600 text-white rounded-full font-medium"
+            onClick={handleNextStep}
+          >
+            {currentStep === steps.length ? 'Create' : 'Continue'}
+          </button>
+        </div>
       )}
     </div>
   );
