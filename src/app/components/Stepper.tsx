@@ -14,21 +14,23 @@ const StepperRoot = React.forwardRef<HTMLElement, StepperRootProps>(
     { currentStep, totalSteps, className, ...otherProps }: StepperRootProps,
     ref
   ) {
-    const progressPercentage = (currentStep / totalSteps) * 100;
+    const segments = Array.from({ length: totalSteps }, (_, index) => index < currentStep);
 
     return (
       <div
         className={SubframeCore.twClassNames(
-          "relative w-full h-2 bg-neutral-300 rounded",
+          "flex w-full h-2 gap-2",
           className
         )}
         ref={ref as any}
         {...otherProps}
       >
-        <div
-          className="absolute top-0 left-0 h-full bg-brand-100 rounded transition-all duration-300"
-          style={{ width: `${progressPercentage}%` }}
-        />
+        {segments.map((filled, index) => (
+          <div
+            key={index}
+            className={`flex-1 h-full rounded-full transition-all duration-300 ${filled ? 'bg-purple-700' : 'bg-gray-300'}`}
+          />
+        ))}
       </div>
     );
   }

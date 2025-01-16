@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import PillButton from "@/app/components/PillButton";
 import TinderSwiper from "@/app/components/TinderSwiper";
+import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
 import { Selection } from "@/types";
 
 type ActivityType = "Sightseeing" | "Outdoor Adventures" | "Cultural Experiences" | "Food & Drink" | "Relaxation";
@@ -42,7 +43,12 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
 
   const handleKeywordSwipe = (keyword: string, direction: 'left' | 'right') => {
     if (direction === 'right') {
-      setSelectedKeywords(prev => prev.includes(keyword) ? prev : [...prev, keyword]);
+      setSelectedKeywords(prev => {
+        if (!prev.includes(keyword)) {
+          return [...prev, keyword];
+        }
+        return prev;
+      });
     }
   };
 
@@ -53,7 +59,11 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
 
   const handleSubmit = () => {
     if (selectedType) {
-      onSelect({ type: selectedType, selectedKeywords, freeText });
+      onSelect({
+        type: selectedType,
+        selectedKeywords,
+        freeText
+      });
       setSelectedType(null);
       setSelectedKeywords([]);
       setFreeText("");
@@ -62,15 +72,17 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
   };
 
   return (
-    <div className="flex flex-col items-start gap-4">
-      <h2 className="text-2xl font-merriweather text-purple-800 mb-4">
+    <div className="flex flex-col items-start gap-4 items-center ">
+      <h2 className="text-2xl font-merriweather text-purple-800 mb-1">
         What kind of activities are you interested in?
       </h2>
-
+      <p className="text-md font-merriweather text-gray-700 mb-4">
+          Select one of the activities or describe your own
+        </p>
       <div className="flex flex-wrap gap-2">
         {Object.keys(activityKeywords).map((type) => (
-          <PillButton
-            key={type}
+          <PillButton 
+            key={type} 
             selected={selectedType === type}
             onClick={() => handleTypeSelect(type as ActivityType)}
           >
@@ -89,21 +101,27 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
         </div>
       )}
 
-      <PillButton onClick={() => setShowFreeText(!showFreeText)} className="bg-purple-300 text-purple-600 mt-4">
-        {showFreeText ? "Hide" : "Describe Activity"}
-      </PillButton>
+      <div className="w-full flex justify-center mt-4">
+      <GlowingButton 
+  onClick={() => setShowFreeText(!showFreeText)} 
+  showFreeText={showFreeText} 
+/>
+
+</div>
 
       {showFreeText && (
-        <input
-          type="text"
-          value={freeText}
-          onChange={handleFreeTextChange}
-          placeholder="Describe your preferred activities"
-          className="w-full py-3 px-4 border border-purple-600 text-purple-600 rounded-full mt-2"
-        />
+        <div className="w-full mt-4 ">
+          <input
+            type="text"
+            value={freeText}
+            onChange={handleFreeTextChange}
+            placeholder="Describe your preferred activities"
+            className="w-full py-3 px-4 border border-purple-600 text-purple-600 rounded-full"
+          />
+        </div>
       )}
     </div>
   );
-};
+}
 
 export default Activities;

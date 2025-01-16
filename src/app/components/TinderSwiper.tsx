@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, useAnimation, PanInfo } from 'framer-motion';
 import PillButton from './PillButton';
 
+
+
 interface TinderSwiperProps {
   cards: string[];
   onSwipe: (card: string, direction: 'left' | 'right') => void;
@@ -87,7 +89,7 @@ const TinderSwiper: React.FC<TinderSwiperProps> = ({ cards, onSwipe, onFinish })
       <div className="w-full flex mt-4">
         <PillButton
           onClick={() => handleSwipe('left')}
-          className="bg-white text-gray-700 w-1/2 text-lg flex items-center justify-center"
+          className="bg-white text-gray-700 w-1/2 text-lg flex mr-4 items-center justify-center"
         >
           Dislike
         </PillButton>
@@ -103,7 +105,6 @@ const TinderSwiper: React.FC<TinderSwiperProps> = ({ cards, onSwipe, onFinish })
 };
 
 export default TinderSwiper;
-
 
 const keywordImageMap: { [key: string]: string } = {
   // Vibe keywords

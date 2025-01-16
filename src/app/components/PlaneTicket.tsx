@@ -21,7 +21,7 @@ const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
         <div className="flex justify-between items-center mb-4">
           <div>
             <p className="text-sm font-merriweather text-gray-600">From</p>
-            <p className="text-lg font-merriweather">YOUR CITY</p>
+            <p className="text-lg font-merriweather">MELBOURNE</p>
           </div>
           <div className="text-center">
             <FaPlane className="text-3xl text-purple-600 transform rotate-90" />
@@ -63,7 +63,7 @@ const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
         </div>
       </div>
       <div className="bg-purple-200 p-4 text-center text-purple-700">
-        <p className="text-sm">Scan this ticket to start your journey!</p>
+        <p className="text-sm">Scan this ticket to start your journey</p>
       </div>
       <VerticalAccordion aiResponse={aiResponse} />
     </div>
@@ -89,13 +89,13 @@ const VerticalAccordion: React.FC<VerticalAccordionProps> = ({ aiResponse }) => 
   const icons = [FiMapPin, FiCalendar, FiHome, FiSun, FiCoffee];
   
   const items = aiResponse
-    ? aiResponse.split('\n\n').map((section, index) => ({
-        id: index,
-        title: `Day ${index + 1}`,
-        Icon: icons[index % icons.length],
-        description: section.trim(),
-      }))
-    : [];
+  ? aiResponse.split('\n\n').map((section, index, array) => ({
+      id: index,
+      title: index === array.length - 1 ? "What's Next?" : `Day ${index + 1}`,
+      Icon: icons[index % icons.length],
+      description: section.trim(),
+    }))
+  : [];
 
   return (
     <section className="p-4 bg-white">
@@ -129,7 +129,7 @@ const Panel: React.FC<PanelProps> = ({ open, setOpen, id, Icon, title, descripti
           <div className="w-6 aspect-square bg-purple-800 text-white grid place-items-center">
             <Icon />
           </div>
-          <span className="text-xl font-light">{title}</span>
+          <span className="text-xl font-merriweather font-thin">{title}</span>
         </div>
       </button>
 
