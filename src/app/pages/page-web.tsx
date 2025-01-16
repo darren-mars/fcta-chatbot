@@ -165,81 +165,94 @@ function StepflowFctaWeb() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white p-8 overflow-hidden">  
+    <div className="flex flex-col h-screen bg-white p-8 overflow-hidden">
+  
       <div className="flex flex-1">
-        {showFinalJSON ? (
-          // Final JSON and AI Response Display
-          <div className="w-full flex flex-col items-center justify-center">
-            <h2 className="text-3xl font-bold text-purple-800 mb-4">Your Trip Preferences ✨</h2>
-            <div className="flex space-x-4 w-full">
-              <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
-            </div>
-            {error && <div className="text-red-500 mt-4">{error}</div>}
-            <button
-              className="mt-6 px-6 py-3 rounded-full bg-purple-600 text-white font-medium"
-              onClick={() => {
-                setCurrentStep(1);
-                setShowFinalJSON(false);
-                setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
-                setAiResponse(null);
-                setError(null);
-                setRequestsLog(""); // Clear requests log
-              }}
-            >
-              Start Over 🔄
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Left side - Swiper */}
-            <div className="w-1/2 pr-4">
-              <div className="border-2 border-gray-200 rounded-xl p-6 h-full w-full flex flex-col">
-                {currentKeywords.length > 0 && (
-                  <div className="flex-1 flex flex-col items-center justify-center">
-                    <div className="w-full h-full max-w-xl">
-                      <TinderSwiper
-                        cards={currentKeywords}
-                        onSwipe={handleKeywordSwipe}
-                        onFinish={() => console.log("Swiping finished")}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Right side - Questions */}
-            <div className="w-1/2 pl-4">
-              <div className="border-2 border-gray-200 rounded-xl p-6 h-full">
-                <Header />
-                <Stepper currentStep={currentStep} totalSteps={steps.length} />
-                <div className="mt-8">
-                  <CurrentStepComponent
-                    onSelect={handleTypeSelect}
-                    selections={userSelections[currentStepKey]}
-                    onFreeTextChange={handleFreeTextChange}
-                    setKeywords={(keywords) => {
-                      setCurrentKeywords(keywords);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-      {/* Continue button */}
-      {!showFinalJSON && (
-        <div className="flex justify-center mt-8">
-          <button
-            className="px-6 py-3 bg-purple-600 text-white rounded-full font-medium"
-            onClick={handleNextStep}
+      {showFinalJSON ? (
+        // Final JSON and AI Response Display
+  <div className="w-full flex flex-col items-center justify-center">
+    <div className="flex space-x-4 w-full">
+    <div className="flex space-x-4 w-full">
+      <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
+    </div>
+
+    </div>
+    {error && <div className="text-red-500 mt-4">{error}</div>}
+    <button
+      className="mt-6 px-6 py-3 rounded-full bg-purple-900 text-white font-medium"
+      onClick={() => {
+        setCurrentStep(1);
+        setShowFinalJSON(false);
+        setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
+        setAiResponse(null);
+        setError(null);
+              setRequestsLog(""); // Clear requests log
+            }}
           >
-            {currentStep === steps.length ? 'Create' : 'Continue'}
+            Start Over
           </button>
         </div>
-      )}
+      ) : (
+        <>
+        <div className="flex w-full h-full items-center justify-center">
+          {/* Left side - Swiper */}
+          <div className="w-1/2 pr-4">
+            <div className="border-1 rounded-xl p-6 h-full w-full flex flex-col">
+              {currentKeywords.length > 0 && (
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="w-full h-1/2 max-w-xl">
+                    <TinderSwiper
+                      cards={currentKeywords}
+                      onSwipe={handleKeywordSwipe}
+                      onFinish={() => console.log("Swiping finished")}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div
+        className="inline-block h-full w-0.5 self-stretch bg-neutral-100 opacity-100"
+      ></div>
+      
+      {/* Right side - Questions */}
+      <div className="w-1/2 pl-4">
+        <div className="border-2 border-gray-200 rounded-xl p-6 h-full flex flex-col justify-center items-center text-center">
+          <Header />
+          <Stepper currentStep={currentStep} totalSteps={steps.length} />
+          <div className="mt-8 w-full flex flex-col items-center">
+            <CurrentStepComponent
+              onSelect={handleTypeSelect}
+              selections={userSelections[currentStepKey]}
+              onFreeTextChange={handleFreeTextChange}
+              setKeywords={(keywords) => {
+                setCurrentKeywords(keywords);
+              }}
+            />
+          </div>
+        </div>
+                      {/* Continue button */}
+                      {!showFinalJSON && (
+          <div className="flex justify-center mt-8">
+            <button
+              className="px-6 py-3 bg-[#3d144d] text-white rounded-full font-medium"
+              onClick={handleNextStep}
+            >
+              {currentStep === steps.length ? 'Create' : 'Continue'}
+            </button>
+          </div>
+        )}
+      </div>
+
+        </div>
+      </>
+      
+        )}
+      </div>
     </div>
   );
+  
 }
 
 export default StepflowFctaWeb;

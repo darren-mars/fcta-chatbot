@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import PillButton from "@/app/components/PillButton";
 import TinderSwiper from "@/app/components/TinderSwiper";
-
+import GlowingButton from '@/app/components/GlowingButton';
 interface Selection {
   type: string;
   selectedKeywords?: string[];
@@ -84,10 +84,13 @@ const Vibe: React.FC<VibeProps> = ({ onSelect, selections, onFreeTextChange, set
   };
 
   return (
-    <div className="flex flex-col items-start gap-4">
-      <h2 className="text-2xl font-merriweather text-purple-800 mb-4">
+    <div className="flex flex-col items-start gap-4 items-center ">
+      <h2 className="text-2xl font-merriweather text-purple-800 mb-1">
         What kind of vibe would you like your trip to have?
       </h2>
+      <p className="text-md font-merriweather text-gray-700 mb-4">
+          Select one of the experiences or describe your own
+        </p>
       <div className="flex flex-wrap gap-2">
         {vibeTypes.map((type) => (
           <PillButton 
@@ -109,16 +112,19 @@ const Vibe: React.FC<VibeProps> = ({ onSelect, selections, onFreeTextChange, set
           />
         </div>
       )}
+      
+      <div className="w-full flex justify-center mt-4">
+      <GlowingButton 
+  onClick={() => setShowFreeText(!showFreeText)} 
+  showFreeText={showFreeText} 
+/>
 
-      <PillButton
-        onClick={() => setShowFreeText(!showFreeText)}
-        className="bg-purple-300 text-purple-600 mt-4"
-      >
-        {showFreeText ? "Hide" : "Describe Experience"}
-      </PillButton>
+</div>
+
+
 
       {showFreeText && (
-        <div className="w-full mt-4">
+        <div className="w-full mt-4 ">
           <input
             type="text"
             value={freeText}

@@ -13,13 +13,17 @@ body {
   flex-grow: 1;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    box-shadow: 0 0 20px 5px rgba(79, 70, 229, 0.8), 0 0 30px 10px rgba(99, 102, 241, 0.6), 0 0 40px 15px rgba(129, 140, 248, 0.4);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 25px 10px rgba(79, 70, 229, 0.8), 0 0 35px 15px rgba(99, 102, 241, 0.6), 0 0 45px 20px rgba(129, 140, 248, 0.4);
+  }
 }
 
-.loader {
-  border-top-color: #9333ea;
-  -webkit-animation: spin 1s linear infinite;
-  animation: spin 1s linear infinite;
+.animate-pulse-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

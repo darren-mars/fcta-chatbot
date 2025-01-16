@@ -1,7 +1,7 @@
 // src/components/NavigationButtons.tsx
 
 import React from 'react';
-import { Button } from "@/app/components/Button";
+import { Button } from "@/app/components/GlowButton";
 
 interface NavigationButtonsProps {
   currentStep: number;
