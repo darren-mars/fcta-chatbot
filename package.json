@@ -9,27 +9,44 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "ai": "^2.2.13",
+    "@react-spring/web": "^9.7.5",
+    "@subframe/core": "^1.134.0",
     "@types/node": "22.10.1",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@types/uuid": "^10.0.0",
-    "ai": "^2.2.13",
+    "ai": "^4.0.38",
     "autoprefixer": "10.4.20",
+    "classnames": "^2.3.2",
     "eslint": "9.15.0",
     "eslint-config-next": "15.0.3",
+    "framer-motion": "^11.17.1",
     "lucide-react": "^0.462.0",
-    "next": "15.0.3",
+    "next": "^15.1.4",
     "postcss": "8.4.49",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-markdown": "^9.0.1",
+    "react-responsive": "^10.0.0",
+    "rn-swiper-list": "^2.2.0",
+    "swiper": "^11.2.1",
     "tailwindcss": "3.4.15",
     "typescript": "5.7.2",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
+    "@types/node": "20.17.12",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10",
+    "eslint": "^8",
+    "eslint-config-next": "13.5.4",
+    "postcss": "^8",
     "prettier": "^3.4.1",
-    "prettier-plugin-tailwindcss": "^0.6.9"
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "tailwindcss": "^3",
+    "typescript": "5.7.3"
   }
 }
