@@ -95,7 +95,7 @@ const TinderSwiper: React.FC<TinderSwiperProps> = ({ cards, onSwipe, onFinish })
         </PillButton>
         <PillButton
           onClick={() => handleSwipe('right')}
-          className="bg-[#30123C] text-white w-1/2 text-lg flex items-center justify-center"
+          className="bg-[#39104a] text-white w-1/2 text-lg flex items-center justify-center"
         >
           Like
         </PillButton>
