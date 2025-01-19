@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useMediaQuery } from 'react-responsive';
+import StepflowFctaWeb from './pages/page-web';
+import StepflowFctaMobile from './pages/page-mobile';
 
 export default function LandingPage() {
-  const router = useRouter();
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const [isClient, setIsClient] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showFlow, setShowFlow] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleStart = () => {
     setIsTransitioning(true);
     setTimeout(() => {
-      router.push('/chat');
+      setShowFlow(true);
     }, 2000);
   };
+
+  if (!isClient) {
+    return null;
+  }
+
+  if (showFlow) {
+    return isMobile ? <StepflowFctaMobile /> : <StepflowFctaWeb />;
+  }
 
   return (
     <div className={`relative min-h-screen overflow-hidden transition-all duration-[2000ms] ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
@@ -28,19 +44,15 @@ export default function LandingPage() {
 
       <div className="relative z-20 flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-7 mt-80 text-sm text-center">
-          <p
-            className="text-white text-sm"
-            // style={{ fontFamily: 'TrajanPro, serif' }}
-          >
-          Your journey to unparalleled luxury starts here.
-          {/* <br /> */}
+          <p className="text-white text-sm">
+            Your journey to unparalleled luxury starts here.
           </p>
           <button
             onClick={handleStart}
             className="px-5 py-1 bg-violet-100/20 backdrop-blur-sm text-white rounded-3xl hover:bg-violet-500/40 transition-colors tracking-wider text-xl"
             style={{ fontFamily: 'TrajanPro, serif' }}
           >
-          Begin
+            Begin
           </button>
         </div>
       </div>

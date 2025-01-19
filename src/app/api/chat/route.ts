@@ -1,5 +1,7 @@
-// app/api/chat/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { formatSelectionsForQuery } from '@/lib/formatSelections';
+import fs from 'fs/promises'; // Use promises for async file read
+import path from 'path';
 
 interface VectorSearchResponse {
   manifest: {
@@ -12,15 +14,45 @@ interface VectorSearchResponse {
   };
 }
 
+const SYSTEM_PROMPT_PATH = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
+let SYSTEM_PROMPT = '';
 
-const BASE_PROMPT = process.env.NEXT_PUBLIC_BASE_PROMPT || '';
+// Asynchronously read the system prompt file when the server starts
+async function loadSystemPrompt() {
+  if (SYSTEM_PROMPT_PATH) {
+    try {
+      SYSTEM_PROMPT = await fs.readFile(SYSTEM_PROMPT_PATH, 'utf-8');
+    } catch (error) {
+      console.error(`Failed to read the system prompt file: ${(error as Error).message}`);
+    }
+  }
+}
+
+// Load the system prompt at startup
+loadSystemPrompt();
 
 export async function POST(req: NextRequest) {
   try {
-    const { query, oauthToken, previousMessages } = await req.json();
-    if (!query || !oauthToken) {
+    // 1. Parse Body
+    const { query, userSelections, oauthToken } = await req.json();
+
+    // 2. Validate OAuth token
+    if (!oauthToken) {
       return NextResponse.json(
-        { error: 'Query text or OAuth token is missing' },
+        { error: 'OAuth token is missing' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Handle input: if we received structured JSON, convert it to text query
+    let finalQuery = query;
+    if (!finalQuery && userSelections) {
+      finalQuery = formatSelectionsForQuery(userSelections);
+    }
+
+    if (!finalQuery) {
+      return NextResponse.json(
+        { error: 'No query or userSelections provided' },
         { status: 400 }
       );
     }
@@ -31,14 +63,14 @@ export async function POST(req: NextRequest) {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${oauthToken}`,
+          Authorization: `Bearer ${oauthToken}`,
           'Content-Type': 'application/json;charset=UTF-8',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           num_results: 3,
-          columns: ["content_chunk"],
-          query_text: query,
+          columns: ['content_chunk'],
+          query_text: finalQuery,
         }),
       }
     );
@@ -60,19 +92,18 @@ export async function POST(req: NextRequest) {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`token:${oauthToken}`).toString('base64')}`,
+          Authorization: `Basic ${Buffer.from(`token:${oauthToken}`).toString('base64')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           messages: [
             {
-              role: "system",
-              content: `${BASE_PROMPT}\n\n${relevantContext}`,
+              role: 'system',
+              content: `${SYSTEM_PROMPT}\n\n${relevantContext}`,
             },
-            ...previousMessages,
             {
-              role: "user",
-              content: query,
+              role: 'user',
+              content: finalQuery,
             },
           ],
         }),
@@ -89,7 +120,7 @@ export async function POST(req: NextRequest) {
     console.log('Llama API Response:', JSON.stringify(llamaData, null, 2));
 
     // Extract the assistant's response from the Llama API response
-    const assistantResponse = llamaData.choices[0]?.message?.content || "No response received.";
+    const assistantResponse = llamaData.choices?.[0]?.message?.content || 'No response received.';
 
     // Step 4: Respond with the result
     return NextResponse.json({
@@ -98,13 +129,17 @@ export async function POST(req: NextRequest) {
         row_count: 1,
         data_array: [[assistantResponse, 1.0]],
       },
+      finalQuery,
+      relevantContext,
+      systemPrompt: SYSTEM_PROMPT,
     });
+
   } catch (error) {
     console.error('Error in chat API route:', error);
     return NextResponse.json(
       {
         error: 'Failed to process request',
-        details: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: (error as Error).message || 'Unknown error occurred',
       },
       { status: 500 }
     );
