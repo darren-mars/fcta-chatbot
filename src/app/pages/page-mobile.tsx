@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
-import Header from '../components/Header';
 import { Stepper } from '../components/Stepper';
 import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
@@ -208,7 +207,6 @@ function StepflowFctaMobile() {
         <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
       ) : (
         <div className="flex flex-col h-full overflow-y-auto">
-          <Header />
           <Stepper currentStep={currentStep} totalSteps={totalSteps} />
           <div className="flex-1 flex flex-col items-center">
             <div className="w-full flex-1">

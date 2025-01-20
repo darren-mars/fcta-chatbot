@@ -1,23 +1,23 @@
 {
   "compilerOptions": {
-    "target": "ESNext", // Use modern JavaScript targeting for compatibility
+    "target": "ESNext",
     "lib": [
       "DOM",
       "DOM.Iterable",
       "ESNext"
-    ], // Keep case consistency
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "ESNext", // Ensure modern ESM compatibility
-    "moduleResolution": "node", // "bundler" can cause issues; "node" is safer for most setups
+    "module": "ESNext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": ".", // Optional but recommended for `paths`
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "src/*"

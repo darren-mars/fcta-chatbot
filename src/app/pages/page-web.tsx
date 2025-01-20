@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
-import Header from '../components/Header';
 import { Stepper } from '../components/Stepper';
 import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
@@ -9,6 +8,7 @@ import Activities from '../pages/Activities';
 import TinderSwiper from '@/app/components/TinderSwiper';
 import { UserSelections, Selection } from '@/types';
 import PlaneTicket from '../components/PlaneTicket';
+import { PillButton } from "../components/PillButton";
 // import { LayoutGrid } from "../components/LayoutGrid";
 
 const steps = [Vibe, Season, Accommodation, Activities];
@@ -185,83 +185,6 @@ function StepflowFctaWeb() {
   };
   
 
-  const cards = [
-    {
-      id: '1',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            House in the woods
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            A serene and tranquil retreat, this house in the woods offers a peaceful
-            escape from the hustle and bustle of city life.
-          </p>
-        </div>
-      ),
-      className: "md:col-span-2",
-      thumbnail:
-        "https://images.unsplash.com/photo-1476231682828-37e571bc172f?q=80&w=3474&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: '2',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            House above the clouds
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            Perched high above the world, this house offers breathtaking views and a
-            unique living experience. It&apos;s a place where the sky meets home,
-            and tranquility is a way of life.
-          </p>
-        </div>
-      ),
-      className: "col-span-1",
-      thumbnail:
-        "https://images.unsplash.com/photo-1464457312035-3d7d0e0c058e?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: '3',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            Greens all over
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            A house surrounded by greenery and nature&apos;s beauty. It&apos;s the
-            perfect place to relax, unwind, and enjoy life.
-          </p>
-        </div>
-      ),
-      className: "col-span-1",
-      thumbnail:
-        "https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: '4',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            Rivers are serene
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            A house by the river is a place of peace and tranquility. It&apos;s the
-            perfect place to relax, unwind, and enjoy life.
-          </p>
-        </div>
-      ),
-      className: "md:col-span-2",
-      thumbnail:
-        "https://images.unsplash.com/photo-1475070929565-c985b496cb9f?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-  ];
-  
-
   return (
     <div className="flex flex-col h-screen bg-white p-8 overflow-hidden">
       {/* Toggle Switch */}
@@ -329,9 +252,9 @@ function StepflowFctaWeb() {
             </div>
           ) : (
             <>
-              <div className="flex w-full h-full items-center justify-center">
+              <div className="flex w-full items-center justify-center">
                 {/* Left side - Swiper */}
-                <div className="w-1/2 pr-4">
+                <div className="w-1/2 pr-4 ">
                   <div className="border-1 rounded-xl p-6 h-full w-full flex flex-col">
                     {currentKeywords.length > 0 && (
                       <div className="flex-1 flex flex-col items-center justify-center">
@@ -350,9 +273,8 @@ function StepflowFctaWeb() {
                 <div className="inline-block h-full w-0.5 self-stretch bg-neutral-100 opacity-100"></div>
   
                 {/* Right side - Questions */}
-                <div className="w-1/2 pl-4">
+                <div className="w-1/2 pl-4 ">
                   <div className="border-2 border-gray-200 rounded-xl p-6 h-full flex flex-col justify-center items-center text-center">
-                    <Header />
                     <Stepper currentStep={currentStep} totalSteps={totalSteps} />
                     <div className="mt-8 w-full flex flex-col items-center">
                       <CurrentStepComponent
@@ -368,12 +290,12 @@ function StepflowFctaWeb() {
                   {/* Continue button */}
                   {!showFinalJSON && (
                     <div className="flex justify-center mt-8">
-                      <button
-                        className="px-6 py-3 bg-[#3d144d] text-white rounded-full font-medium"
-                        onClick={handleNextStep}
+                      <PillButton
+          className="bg-[#30123C] text-white w-1/3 text-lg flex items-center justify-center"
+          onClick={handleNextStep}
                       >
                         {currentStep === totalSteps ? 'Create' : 'Continue'}
-                      </button>
+                      </PillButton>
                     </div>
                   )}
                 </div>

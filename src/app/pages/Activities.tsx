@@ -1,7 +1,7 @@
 // src/components/Activities.tsx
 
 import React, { useState } from "react";
-import PillButton from "@/app/components/PillButton";
+import { PillButton, SelectablePillButton } from "@/app/components/PillButton";
 import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
 import { Selection } from "@/types";
 
@@ -72,7 +72,7 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
 
   return (
     <div className="flex flex-col items-start gap-4 items-center ">
-      <h2 className="text-2xl font-merriweather text-purple-800 mb-1">
+      <h2 className="text-2xl font-merriweather texttext-[#30123C] mb-1">
         What kind of activities are you interested in?
       </h2>
       <p className="text-md font-merriweather text-gray-700 mb-4">
@@ -80,13 +80,13 @@ const Activities: React.FC<ActivitiesProps> = ({ onSelect, selections, onFreeTex
         </p>
       <div className="flex flex-wrap gap-2">
         {Object.keys(activityKeywords).map((type) => (
-          <PillButton 
+          <SelectablePillButton 
             key={type} 
             selected={selectedType === type}
             onClick={() => handleTypeSelect(type as ActivityType)}
           >
             {type}
-          </PillButton>
+          </SelectablePillButton>
         ))}
       </div>
 
