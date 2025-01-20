@@ -100,6 +100,7 @@ const TinderSwiper: React.FC<TinderSwiperProps> = ({ cards, onSwipe, onFinish })
           Like
         </PillButton>
       </div>
+      
     </div>
   );
 };
