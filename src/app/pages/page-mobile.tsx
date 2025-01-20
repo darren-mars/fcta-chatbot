@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
-import Header from '../components/Header';
 import { Stepper } from '../components/Stepper';
 import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
@@ -208,11 +207,10 @@ function StepflowFctaMobile() {
         <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
       ) : (
         <div className="flex flex-col h-full overflow-y-auto">
-          <Header />
           <Stepper currentStep={currentStep} totalSteps={totalSteps} />
           <div className="flex-1 flex flex-col items-center">
             <div className="w-full flex-1">
-              <div className="border-2 border-gray-200 rounded-xl p-4 h-full flex flex-col justify-center items-center text-center">
+              <div className="border-2 border-gray-200 rounded-xl p-4 mt-8 h-full flex flex-col justify-center items-center text-center">
                 <div className="mt-4 w-full flex flex-col items-center">
                   <CurrentStepComponent
                     onSelect={handleTypeSelect}
@@ -228,7 +226,7 @@ function StepflowFctaMobile() {
               <div className="w-full mb-4 flex-none">
                 <div className="border-1 rounded-xl p-4 h-full w-full flex flex-col">
                   <div className="flex-1 flex flex-col items-center justify-center">
-                    <div className="w-full h-auto max-w-sm">
+                    <div className="w-full h-auto max-w-sm mt-12">
                       <TinderSwiper
                         cards={currentKeywords}
                         onSwipe={handleKeywordSwipe}
@@ -240,16 +238,18 @@ function StepflowFctaMobile() {
               </div>
             )}
 
-            <div className="flex justify-center mt-4 mb-4">
-              <button
-                className="px-6 py-3 bg-[#3d144d] text-white rounded-full font-medium"
-                onClick={handleNextStep}
-              >
-                {currentStep === totalSteps ? 'Create' : 'Continue'}
-              </button>
-            </div>
 
-            <div ref={bottomRef}></div>
+              <div className="flex flex-col items-center mt-4 mb-6">
+                <button
+                  className="px-8 py-2 text-white mt-8 bg-[#481a5a] rounded-full"
+                  onClick={handleNextStep}
+                >
+                  {currentStep === totalSteps ? 'Create' : '→'}
+                </button>
+              </div>
+
+              <div ref={bottomRef}></div>
+
           </div>
         </div>
       )}

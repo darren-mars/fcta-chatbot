@@ -44,9 +44,6 @@ export default function LandingPage() {
 
       <div className="relative z-20 flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-7 mt-80 text-sm text-center">
-          <p className="text-white text-sm">
-            Your journey to unparalleled luxury starts here.
-          </p>
           <button
             onClick={handleStart}
             className="px-5 py-1 bg-violet-100/20 backdrop-blur-sm text-white rounded-3xl hover:bg-violet-500/40 transition-colors tracking-wider text-xl"

@@ -1,7 +1,7 @@
 // src/app/pages/Season.tsx
 
 import React, { useState } from "react";
-import PillButton from "@/app/components/PillButton";
+import { PillButton, SelectablePillButton } from "@/app/components/PillButton";
 import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
 
 interface Selection {
@@ -78,7 +78,7 @@ const Season: React.FC<SeasonProps> = ({ onSelect, selections, onFreeTextChange,
 
   return (
     <div className="flex flex-col items-start gap-4 items-center ">
-      <h2 className="text-2xl font-merriweather text-purple-800 mb-1">
+      <h2 className="text-2xl font-merriweather text-[#30123C] mb-1">
         What season inspires your ideal escape?
       </h2>
       <p className="text-md font-merriweather text-gray-700 mb-4">
@@ -86,13 +86,13 @@ const Season: React.FC<SeasonProps> = ({ onSelect, selections, onFreeTextChange,
         </p>
       <div className="flex flex-wrap gap-2">
         {seasonTypes.map((type) => (
-          <PillButton 
+          <SelectablePillButton 
             key={type} 
             selected={selectedType === type}
             onClick={() => handleTypeSelect(type)}
           >
             {type}
-          </PillButton>
+          </SelectablePillButton>
         ))}
       </div>
 
