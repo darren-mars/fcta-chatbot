@@ -1,27 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ESNext", // Use modern JavaScript targeting for compatibility
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ], // Keep case consistency
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "ESNext", // Ensure modern ESM compatibility
-    "moduleResolution": "node", // "bundler" can cause issues; "node" is safer for most setups
+    "module": "ESNext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": ".", // Optional but recommended for `paths`
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["./src/*"]
     },
     "plugins": [
       {
@@ -30,13 +24,10 @@
     ]
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "next-env.d.ts",
-    "build/types/**/*.ts"
+    ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

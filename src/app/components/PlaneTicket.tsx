@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { FaPlane } from "react-icons/fa";
 import { FiMapPin, FiCalendar, FiHome, FiSun, FiCoffee } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
-import WorldMap from "@/app/components/WorldMap";
+import WorldMap from "../components/WorldMap";
 
 interface PlaneTicketProps {
   loading: boolean;
@@ -12,8 +12,8 @@ interface PlaneTicketProps {
 
 const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
   return (
-    <div className="w-full max-w-md mx-auto bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-purple-600">
-      <div className="p-4 bg-purple-600 text-white flex justify-between items-center">
+    <div className="w-full max-w-md mx-auto bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-#481a5a">
+      <div className="p-4 bg-[#481a5a] text-white flex justify-between items-center">
         <h2 className="text-2xl font-merriweather">Travel Associates</h2>
         <FaPlane className="text-3xl" />
       </div>
@@ -126,7 +126,7 @@ const Panel: React.FC<PanelProps> = ({ open, setOpen, id, Icon, title, descripti
         onClick={() => setOpen(isOpen ? -1 : id)}
       >
         <div className="flex items-center gap-4">
-          <div className="w-6 aspect-square bg-purple-800 text-white grid place-items-center">
+          <div className="w-6 aspect-square bg-[#481a5a] text-white grid place-items-center">
             <Icon />
           </div>
           <span className="text-xl font-merriweather font-thin">{title}</span>

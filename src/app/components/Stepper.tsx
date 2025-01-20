@@ -28,7 +28,7 @@ const StepperRoot = React.forwardRef<HTMLElement, StepperRootProps>(
         {segments.map((filled, index) => (
           <div
             key={index}
-            className={`flex-1 h-full rounded-full transition-all duration-300 ${filled ? 'bg-purple-700' : 'bg-gray-300'}`}
+            className={`flex-1 h-full rounded-full transition-all duration-300 ${filled ? 'bg-[#30123C]' : 'bg-gray-300'}`}
           />
         ))}
       </div>

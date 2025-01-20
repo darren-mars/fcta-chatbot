@@ -1,5 +1,5 @@
-
 import React from 'react';
+import Image from 'next/image';
 
 const GlowingButton: React.FC<{ onClick: () => void; showFreeText: boolean }> = ({ onClick, showFreeText }) => {
   return (
@@ -12,7 +12,13 @@ const GlowingButton: React.FC<{ onClick: () => void; showFreeText: boolean }> = 
         <span className="absolute inset-0 rounded-full bg-white opacity-50" />
         <span className="relative inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-white px-3 py-1 text-sm font-medium text-gray-700 transition-colors duration-300 ease-in-out hover:bg-opacity-90">
           <span className="inline-flex items-center">
-            <img src="/images/ai-logo.svg" alt="" className="w-6 h-6 mr-2" />
+            <Image
+              src="/images/ai-logo.svg"
+              alt="AI Logo"
+              width={24}
+              height={24}
+              className="mr-2"
+            />
             <span>{showFreeText ? "Hide" : "Describe Experience"}</span>
           </span>
         </span>

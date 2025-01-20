@@ -1,9 +1,9 @@
 // src/components/Accommodation.tsx
 
 import React, { useState } from "react";
-import PillButton from "@/app/components/PillButton";
-import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
-import { Selection } from "@/types";
+import { PillButton, SelectablePillButton } from "../components/PillButton";
+import GlowingButton from '../components/GlowingButton'; // Ensure this matches Vibe.tsx
+import { Selection } from "../../types";
 
 type AccommodationType = "Hotel" | "Resort" | "Vacation Rental" | "Boutique Hotel" | "Camping";
 
@@ -72,7 +72,7 @@ const Accommodation: React.FC<AccommodationProps> = ({ onSelect, selections, onF
 
   return (
     <div className="flex flex-col items-start gap-4 items-center ">
-      <h2 className="text-2xl font-merriweather text-purple-800 mb-1">
+      <h2 className="text-2xl font-merriweather text-[#30123C] mb-1">
         What type of accommodation do you prefer?
       </h2>
       <p className="text-md font-merriweather text-gray-700 mb-4">
@@ -80,13 +80,13 @@ const Accommodation: React.FC<AccommodationProps> = ({ onSelect, selections, onF
         </p>
       <div className="flex flex-wrap gap-2">
         {Object.keys(accommodationKeywords).map((type) => (
-          <PillButton 
+          <SelectablePillButton 
             key={type} 
             selected={selectedType === type}
             onClick={() => handleTypeSelect(type as AccommodationType)}
           >
             {type}
-          </PillButton>
+          </SelectablePillButton>
         ))}
       </div>
 
