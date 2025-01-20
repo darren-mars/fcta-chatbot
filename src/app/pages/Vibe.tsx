@@ -1,9 +1,8 @@
 // src/app/pages/Vibe.tsx
 
 import React, { useState } from "react";
-import { PillButton, SelectablePillButton } from "@/app/components/PillButton";
-
-import GlowingButton from '@/app/components/GlowingButton';
+import { PillButton, SelectablePillButton } from "../components/PillButton";
+import GlowingButton from '../components/GlowingButton';
 interface Selection {
   type: string;
   selectedKeywords?: string[];

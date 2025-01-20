@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { FaPlane } from "react-icons/fa";
 import { FiMapPin, FiCalendar, FiHome, FiSun, FiCoffee } from "react-icons/fi";
 import { AnimatePresence, motion } from "framer-motion";
-import WorldMap from "@/app/components/WorldMap";
+import WorldMap from "../components/WorldMap";
 
 interface PlaneTicketProps {
   loading: boolean;

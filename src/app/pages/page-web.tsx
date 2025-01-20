@@ -5,8 +5,8 @@ import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
 import Accommodation from '../pages/Accomodation';
 import Activities from '../pages/Activities';
-import TinderSwiper from '@/app/components/TinderSwiper';
-import { UserSelections, Selection } from '@/types';
+import TinderSwiper from '../components/TinderSwiper';
+import { UserSelections, Selection } from '../../types';
 import PlaneTicket from '../components/PlaneTicket';
 import { PillButton } from '../components/PillButton';
 import { LayoutGrid } from '../components/LayoutGrid'; // Import LayoutGrid

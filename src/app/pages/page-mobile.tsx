@@ -5,10 +5,9 @@ import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
 import Accommodation from '../pages/Accomodation';
 import Activities from '../pages/Activities';
-import TinderSwiper from '@/app/components/TinderSwiper';
-import { UserSelections, Selection } from '@/types';
+import TinderSwiper from '../components/TinderSwiper';
+import { UserSelections, Selection } from '../../types';
 import PlaneTicket from '../components/PlaneTicket';
-import GlowingButton from '../components/GlowingButton'; // Import GlowingButton component
 
 const steps = [Vibe, Season, Accommodation, Activities];
 

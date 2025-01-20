@@ -1,8 +1,8 @@
 // src/app/pages/Season.tsx
 
 import React, { useState } from "react";
-import { PillButton, SelectablePillButton } from "@/app/components/PillButton";
-import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
+import { PillButton, SelectablePillButton } from "../components/PillButton";
+import GlowingButton from '../components/GlowingButton'; // Ensure this matches Vibe.tsx
 
 interface Selection {
   type: string;

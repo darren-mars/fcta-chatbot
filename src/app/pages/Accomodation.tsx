@@ -1,9 +1,9 @@
 // src/components/Accommodation.tsx
 
 import React, { useState } from "react";
-import { PillButton, SelectablePillButton } from "@/app/components/PillButton";
-import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
-import { Selection } from "@/types";
+import { PillButton, SelectablePillButton } from "../components/PillButton";
+import GlowingButton from '../components/GlowingButton'; // Ensure this matches Vibe.tsx
+import { Selection } from "../../types";
 
 type AccommodationType = "Hotel" | "Resort" | "Vacation Rental" | "Boutique Hotel" | "Camping";
 
