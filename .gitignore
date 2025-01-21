@@ -26,7 +26,6 @@ yarn-error.log*
 
 # local env files
 .env*.local
-fcta-env
 
 # vercel
 .vercel
@@ -227,7 +226,13 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# pytest
-data/__pycache__/
-data/src/__pycache__/
-data/tests/__pycache__/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+ENV/
+env/

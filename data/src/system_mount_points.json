@@ -1,9 +1,0 @@
-[
-    {
-        "container_name": "chatbot-rag-data",
-        "storage_account_name": "fctainnovationstorage",
-        "storage_account_access_key": "${STORAGE_ACCOUNT_ACCESS_KEY}",
-        "data_source_type": "checkpoint",
-        "subdirectories": []
-    }
-]
