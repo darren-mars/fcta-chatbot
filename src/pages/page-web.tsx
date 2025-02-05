@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
-import Header from '@/app/components/Header';
+import { motion, AnimatePresence } from "framer-motion";
 import { Stepper } from '@/app/components/Stepper';
 import Vibe from '../pages/Vibe';
 import Season from '../pages/Season';
@@ -34,7 +33,7 @@ function StepflowFctaWeb() {
     response: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showJsonView, setShowJsonView] = useState<boolean>(false); // Toggle state
+  const [showJsonView, setShowJsonView] = useState<boolean>(false);
 
   const CurrentStepComponent = steps[currentStep - 1] as React.FC<{
     onSelect: (selection: Selection) => void;
@@ -352,7 +351,6 @@ function StepflowFctaWeb() {
                 {/* Right side - Questions */}
                 <div className="w-1/2 pl-4">
                   <div className="border-2 border-gray-200 rounded-xl p-6 h-full flex flex-col justify-center items-center text-center">
-                    <Header />
                     <Stepper currentStep={currentStep} totalSteps={totalSteps} />
                     <div className="mt-8 w-full flex flex-col items-center">
                       <CurrentStepComponent

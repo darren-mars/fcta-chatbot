@@ -1,7 +1,7 @@
 // src/app/pages/Vibe.tsx
 
 import React, { useState } from "react";
-import PillButton from "@/app/components/PillButton";
+import { PillButton } from "@/app/components/PillButton";
 
 import GlowingButton from '@/app/components/GlowingButton';
 interface Selection {

@@ -1,7 +1,7 @@
 // src/components/Activities.tsx
 
 import React, { useState } from "react";
-import PillButton from "@/app/components/PillButton";
+import { PillButton } from "@/app/components/PillButton";
 import GlowingButton from '@/app/components/GlowingButton'; // Ensure this matches Vibe.tsx
 import { Selection } from "@/types";
 
