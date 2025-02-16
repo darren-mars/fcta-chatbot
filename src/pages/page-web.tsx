@@ -89,7 +89,7 @@ function StepflowFctaWeb() {
     } else {
       setShowFinalJSON(true);
       setIsLoading(true);
-
+  
       // Prepare the JSON structure 
       const formattedSelections = {
         userSelections: {
@@ -115,16 +115,7 @@ function StepflowFctaWeb() {
           })),
         }
       };
-
-      // Retrieve the OAuth token
-      const oauthToken = process.env.NEXT_PUBLIC_OAUTH_TOKEN || "dapi0ec22d874c1b479080fac1afc5088e97"; // Replace with actual token retrieval logic
-
-      if (!oauthToken) {
-        setError('OAuth token is missing. Please log in.');
-        setIsLoading(false);
-        return;
-      }
-
+  
       // Call the API with userSelections
       try {
         const response = await fetch('/api/chat', {
@@ -133,44 +124,24 @@ function StepflowFctaWeb() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            userSelections: formattedSelections.userSelections,
-            oauthToken,
+            userSelections: formattedSelections.userSelections
           }),
         });
-
+  
         if (!response.ok) {
           throw new Error(`API request failed: ${await response.text()}`);
         }
-
+  
         const responseData = await response.json();
         console.log('AI API Response:', responseData);
-
-        const { finalQuery, relevantContext, systemPrompt } = responseData;
-
-        // Log the request to Databricks
-        const databricksRequest = {
-          num_results: 3,
-          columns: ['content_chunk'],
-          query_text: finalQuery,
-        };
-
+  
+        // Update requests log with simplified information
         setRequestsLog({
-          databricks: JSON.stringify(databricksRequest, null, 2),
-          llama: JSON.stringify({
-            messages: [
-              {
-                role: 'system',
-                content: `${systemPrompt}\n\n${relevantContext}`,
-              },
-              {
-                role: 'user',
-                content: finalQuery,
-              },
-            ]
-          }, null, 2),
+          databricks: 'N/A - Using Lambda/Bedrock API',
+          llama: 'N/A - Using Lambda/Bedrock API',
           response: JSON.stringify(responseData.result.data_array[0][0], null, 2)
         });
-
+  
         // Extract the assistant's response from the API response
         const assistantResponse = responseData.result.data_array[0][0];
         setAiResponse(assistantResponse);

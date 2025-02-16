@@ -3,7 +3,7 @@
 export interface Selection {
   type: string;
   selectedKeywords?: string[];
-  freeText: string;
+  freeText?: string;
 }
 
 export interface UserSelections {

@@ -86,107 +86,53 @@ function StepflowFctaWeb() {
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
-      setCurrentKeywords([]); // Reset current keywords to hide TinderSwiper
+      setCurrentKeywords([]);
     } else {
       setShowFinalJSON(true);
       setIsLoading(true);
-
-      // Prepare the JSON structure
-      const formattedSelections = {
-        userSelections: {
-          vibes: userSelections.vibes.map((v) => ({
-            category: v.type,
-            keywords: v.selectedKeywords,
-            notes: v.freeText || undefined,
-          })),
-          season: userSelections.season.map((s) => ({
-            category: s.type,
-            keywords: s.selectedKeywords,
-            notes: s.freeText || undefined,
-          })),
-          accommodation: userSelections.accommodation.map((a) => ({
-            category: a.type,
-            keywords: a.selectedKeywords,
-            notes: a.freeText || undefined,
-          })),
-          activities: userSelections.activities.map((a) => ({
-            category: a.type,
-            keywords: a.selectedKeywords,
-            notes: a.freeText || undefined,
-          })),
-        },
-      };
-
-      // Retrieve the OAuth token
-      const oauthToken = process.env.NEXT_PUBLIC_OAUTH_TOKEN || 'dapi0ec22d874c1b479080fac1afc5088e97'; // Replace with actual token retrieval logic
-
-      if (!oauthToken) {
-        setError('OAuth token is missing. Please log in.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Call the API with userSelections
+  
       try {
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userSelections: formattedSelections.userSelections,
-            oauthToken,
-          }),
+          body: JSON.stringify(userSelections),
         });
-
+  
         if (!response.ok) {
-          throw new Error(`API request failed: ${await response.text()}`);
+          const errorText = await response.text();
+          throw new Error(`API request failed: ${errorText}`);
         }
-
+  
         const responseData = await response.json();
         console.log('AI API Response:', responseData);
-
-        const { finalQuery, relevantContext, systemPrompt } = responseData;
-
-        // Log the request to Databricks
-        const databricksRequest = {
-          num_results: 3,
-          columns: ['content_chunk'],
-          query_text: finalQuery,
-        };
-
-        setRequestsLog({
-          databricks: JSON.stringify(databricksRequest, null, 2),
-          llama: JSON.stringify(
-            {
-              messages: [
-                {
-                  role: 'system',
-                  content: `${systemPrompt}\n\n${relevantContext}`,
-                },
-                {
-                  role: 'user',
-                  content: finalQuery,
-                },
-              ],
-            },
-            null,
-            2
-          ),
-          response: JSON.stringify(responseData.result.data_array[0][0], null, 2),
-        });
-
-        // Extract the assistant's response from the API response
-        const assistantResponse = responseData.result.data_array[0][0];
-        setAiResponse(assistantResponse);
-      } catch (error) {
+  
+        if (typeof responseData.body === 'string') {
+          try {
+            const parsedBody = JSON.parse(responseData.body);
+            setAiResponse(parsedBody.result.response);
+          } catch (parseError) {
+            console.error('Error parsing response body:', parseError);
+            setAiResponse(responseData.body);
+          }
+        } else {
+          setAiResponse(responseData.result?.response || responseData.body);
+        }
+      } catch (error: unknown) {
         console.error('Error in fetching AI response:', error);
-        setError('Failed to fetch AI response. Please try again later.');
+        if (error instanceof Error) {
+          setError(`Failed to fetch AI response: ${error.message}`);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setIsLoading(false);
       }
     }
   };
+  
+  
 
   return (
     <div className="flex flex-col h-screen bg-white p-8 overflow-hidden">
