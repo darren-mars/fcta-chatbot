@@ -23,14 +23,9 @@ function StepflowFctaWeb() {
     activities: [],
   });
   const [currentKeywords, setCurrentKeywords] = useState<string[]>([]);
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [aiResponse, setAiResponse] = useState<{ itinerary?: string; package?: string } | null>(null);
   const [showFinalJSON, setShowFinalJSON] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [requestsLog, setRequestsLog] = useState<{ databricks: string; llama: string; response: string }>({
-    databricks: '',
-    llama: '',
-    response: '',
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [showJsonView, setShowJsonView] = useState<boolean>(false); // Toggle state
 
@@ -101,36 +96,23 @@ function StepflowFctaWeb() {
         });
   
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`API request failed: ${errorText}`);
+          throw new Error(`API request failed: ${response.statusText}`);
         }
   
         const responseData = await response.json();
         console.log('AI API Response:', responseData);
+        // Set aiResponse directly to the response data
+        setAiResponse(responseData);
   
-        if (typeof responseData.body === 'string') {
-          try {
-            const parsedBody = JSON.parse(responseData.body);
-            setAiResponse(parsedBody.result.response);
-          } catch (parseError) {
-            console.error('Error parsing response body:', parseError);
-            setAiResponse(responseData.body);
-          }
-        } else {
-          setAiResponse(responseData.result?.response || responseData.body);
-        }
       } catch (error: unknown) {
         console.error('Error in fetching AI response:', error);
-        if (error instanceof Error) {
-          setError(`Failed to fetch AI response: ${error.message}`);
-        } else {
-          setError('An unknown error occurred');
-        }
+        setError(error instanceof Error ? error.message : 'An unknown error occurred');
       } finally {
         setIsLoading(false);
       }
     }
   };
+  
   
   
 
@@ -156,18 +138,6 @@ function StepflowFctaWeb() {
             </pre>
           </div>
           <div className="flex flex-col p-4 w-1/5">
-            <h2 className="text-xl font-bold mb-4">Databricks Request</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
-              {requestsLog.databricks}
-            </pre>
-          </div>
-          <div className="flex flex-col p-4 w-1/5">
-            <h2 className="text-xl font-bold mb-4">Databricks Response</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
-              {requestsLog.llama}
-            </pre>
-          </div>
-          <div className="flex flex-col p-4 w-1/5">
             <h2 className="text-xl font-bold mb-4">Generated Itinerary</h2>
             <pre className="bg-gray-100 p-4 rounded-lg overflow-auto h-full">
               {JSON.stringify(aiResponse, null, 2)}
@@ -181,7 +151,7 @@ function StepflowFctaWeb() {
             <div className="w-full flex flex-col items-center justify-center">
               <div className="flex space-x-4 w-full">
                 <div className="flex space-x-4 w-full">
-                  <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
+                <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
                 </div>
               </div>
               {error && <div className="text-red-500 mt-4">{error}</div>}
@@ -193,7 +163,6 @@ function StepflowFctaWeb() {
                   setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
                   setAiResponse(null);
                   setError(null);
-                  setRequestsLog({ databricks: '', llama: '', response: '' }); // Clear requests log
                 }}
               >
                 Start Over

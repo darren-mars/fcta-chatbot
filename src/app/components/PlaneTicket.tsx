@@ -7,22 +7,17 @@ import WorldMap from "../components/WorldMap";
 
 interface PlaneTicketProps {
   loading: boolean;
-  aiResponse: string | null;
-}
-
-interface ItineraryItem {
-  dayTitle: string;
-  dayDetails: string;
+  aiResponse: { itinerary?: string; package?: string } | null; // Update prop type
 }
 
 const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
   const [packageName, setPackageName] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [itinerary, setItinerary] = useState<ItineraryItem[]>([]);
+  const [itinerary, setItinerary] = useState<string[]>([]);
 
   useEffect(() => {
-    if (aiResponse) {
-      const lines = aiResponse.split('\n').filter(line => line.trim() !== '');
+    if (aiResponse?.itinerary) { // Access the itinerary property
+      const lines = aiResponse.itinerary.split('\n');
 
       // Extract package name and description
       const packageNameLine = lines[0];
@@ -36,23 +31,23 @@ const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
       setDescription(descriptionLines.join('\n'));
 
       // Extract itinerary details
-      const itineraryDetails: ItineraryItem[] = [];
+      const itineraryDetails: string[] = [];
       while (i < lines.length) {
-        const dayTitle = lines[i];
-        i++;
         const dayDetails = [];
+        dayDetails.push(lines[i]); // Add the day title
+        i++;
         while (i < lines.length && !lines[i].startsWith('Day')) {
           dayDetails.push(lines[i]);
           i++;
         }
-        itineraryDetails.push({ dayTitle, dayDetails: dayDetails.join('\n') });
+        itineraryDetails.push(dayDetails.join('\n'));
       }
       setItinerary(itineraryDetails);
     }
   }, [aiResponse]);
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-#481a5a">
+    <div className="w-full max-w-md mx-auto bg-white shadow-2xl rounded-lg border-2 border-gray-200 overflow-y-auto">
       <div className="p-4 bg-[#481a5a] text-white flex justify-between items-center">
         <h2 className="text-2xl font-merriweather">Travel Associates</h2>
         <FaPlane className="text-3xl" />
@@ -106,8 +101,8 @@ const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
         <p className="text-sm">Scan this ticket to start your journey</p>
       </div>
       <div className="p-4">
-        <h3 className="text-xl font-merriweather font-semibold">{packageName}</h3>
-        <p className="text-sm font-merriweather">{description}</p>
+        <h3 className="text-2xl font-merriweather font-bold mb-2">{packageName}</h3>
+        <p className="text-sm font-merriweather text-gray-700 whitespace-pre-line">{description}</p>
       </div>
       <VerticalAccordion itinerary={itinerary} />
     </div>
@@ -115,7 +110,7 @@ const PlaneTicket: React.FC<PlaneTicketProps> = ({ loading, aiResponse }) => {
 };
 
 interface VerticalAccordionProps {
-  itinerary: { dayTitle: string; dayDetails: string }[];
+  itinerary: string[];
 }
 
 const VerticalAccordion: React.FC<VerticalAccordionProps> = ({ itinerary }) => {
@@ -124,7 +119,7 @@ const VerticalAccordion: React.FC<VerticalAccordionProps> = ({ itinerary }) => {
 
   return (
     <section className="p-4 bg-white">
-      <div className="flex flex-col h-fit w-full max-w-6xl mx-auto shadow overflow-hidden">
+      <div className="flex flex-col w-full max-w-6xl mx-auto shadow overflow-y-auto">
         {itinerary.map((item, index) => (
           <Panel
             key={index}
@@ -132,8 +127,7 @@ const VerticalAccordion: React.FC<VerticalAccordionProps> = ({ itinerary }) => {
             setOpen={setOpen}
             id={index}
             Icon={icons[index % icons.length]}
-            title={item.dayTitle}
-            description={item.dayDetails}
+            description={item}
           />
         ))}
       </div>
@@ -146,12 +140,13 @@ interface PanelProps {
   setOpen: (id: number) => void;
   id: number;
   Icon: React.ElementType;
-  title: string;
   description: string;
 }
 
-const Panel: React.FC<PanelProps> = ({ open, setOpen, id, Icon, title, description }) => {
+const Panel: React.FC<PanelProps> = ({ open, setOpen, id, Icon, description }) => {
   const isOpen = open === id;
+  const dayTitle = description.split('\n')[0];
+  const dayDetails = description.split('\n').slice(1).join('\n');
 
   return (
     <div className="border-b border-gray-200">
@@ -160,10 +155,10 @@ const Panel: React.FC<PanelProps> = ({ open, setOpen, id, Icon, title, descripti
         onClick={() => setOpen(isOpen ? -1 : id)}
       >
         <div className="flex items-center gap-4">
-          <div className="w-6 aspect-square bg-[#481a5a] text-white grid place-items-center">
-            <Icon />
+          <div className="w-8 h-8 bg-[#481a5a] text-white flex items-center justify-center">
+            <Icon size={20} />
           </div>
-          <span className="text-xl font-merriweather font-thin">{title}</span>
+          <span className="text-xl font-merriweather font-thin">{dayTitle}</span>
         </div>
       </button>
 
@@ -184,7 +179,7 @@ const Panel: React.FC<PanelProps> = ({ open, setOpen, id, Icon, title, descripti
               exit="closed"
               className="px-4 py-2 bg-indigo-50 text-indigo-900"
             >
-              <p>{description}</p>
+              <p className="whitespace-pre-line">{dayDetails}</p>
             </motion.div>
           </motion.div>
         )}
@@ -197,13 +192,13 @@ const panelVariants = {
   open: {
     height: "auto",
     opacity: 1,
-    transition: { duration: 0.3 }
+    transition: { duration: 0.3 },
   },
   closed: {
     height: 0,
     opacity: 0,
-    transition: { duration: 0.3 }
-  }
+    transition: { duration: 0.3 },
+  },
 };
 
 const descriptionVariants = {

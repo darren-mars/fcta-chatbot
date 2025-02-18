@@ -8,9 +8,7 @@ import Activities from '../pages/Activities';
 import TinderSwiper from '@/app/components/TinderSwiper';
 import { UserSelections, Selection } from '@/types';
 import PlaneTicket from '@/app/components/PlaneTicket';
-// import { LayoutGrid } from "../components/LayoutGrid";
-
-const steps = [Vibe, Season, Accommodation, Activities];
+import { LayoutGrid } from "@/app/components/LayoutGrid";
 
 function StepflowFctaWeb() {
   const steps = [Vibe, Season, Accommodation, Activities];
@@ -27,13 +25,13 @@ function StepflowFctaWeb() {
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [showFinalJSON, setShowFinalJSON] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [requestsLog, setRequestsLog] = useState<{databricks: string, llama: string, response: string}>({
+  const [requestsLog, setRequestsLog] = useState<{ databricks: string; llama: string; response: string }>({
     databricks: '',
     llama: '',
-    response: ''
+    response: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showJsonView, setShowJsonView] = useState<boolean>(false);
+  const [showJsonView, setShowJsonView] = useState<boolean>(false); // Toggle state
 
   const CurrentStepComponent = steps[currentStep - 1] as React.FC<{
     onSelect: (selection: Selection) => void;
@@ -85,151 +83,76 @@ function StepflowFctaWeb() {
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
-      setCurrentKeywords([]); // Reset current keywords to hide TinderSwiper
+      setCurrentKeywords([]);
     } else {
       setShowFinalJSON(true);
       setIsLoading(true);
   
-      // Prepare the JSON structure 
+      // Prepare the JSON structure
       const formattedSelections = {
-        userSelections: {
-          vibes: userSelections.vibes.map(v => ({
-            category: v.type,
-            keywords: v.selectedKeywords,
-            notes: v.freeText || undefined
-          })),
-          season: userSelections.season.map(s => ({
-            category: s.type,
-            keywords: s.selectedKeywords,
-            notes: s.freeText || undefined
-          })),
-          accommodation: userSelections.accommodation.map(a => ({
-            category: a.type,
-            keywords: a.selectedKeywords,
-            notes: a.freeText || undefined
-          })),
-          activities: userSelections.activities.map(a => ({
-            category: a.type,
-            keywords: a.selectedKeywords,
-            notes: a.freeText || undefined
-          })),
-        }
+        vibes: userSelections.vibes.map(v => ({
+          category: v.type,
+          keywords: v.selectedKeywords,
+          notes: v.freeText || undefined
+        })),
+        season: userSelections.season.map(s => ({
+          category: s.type,
+          keywords: s.selectedKeywords,
+          notes: s.freeText || undefined
+        })),
+        accommodation: userSelections.accommodation.map(a => ({
+          category: a.type,
+          keywords: a.selectedKeywords,
+          notes: a.freeText || undefined
+        })),
+        activities: userSelections.activities.map(a => ({
+          category: a.type,
+          keywords: a.selectedKeywords,
+          notes: a.freeText || undefined
+        })),
       };
   
-      // Call the API with userSelections
+      // Call the API with the correct structure
       try {
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userSelections: formattedSelections.userSelections
-          }),
+          body: JSON.stringify(formattedSelections), // Use formattedSelections
         });
   
         if (!response.ok) {
-          throw new Error(`API request failed: ${await response.text()}`);
+          const errorText = await response.text();
+          throw new Error(`API request failed: ${errorText}`);
         }
   
         const responseData = await response.json();
         console.log('AI API Response:', responseData);
   
-        // Update requests log with simplified information
-        setRequestsLog({
-          databricks: 'N/A - Using Lambda/Bedrock API',
-          llama: 'N/A - Using Lambda/Bedrock API',
-          response: JSON.stringify(responseData.result.data_array[0][0], null, 2)
-        });
-  
-        // Extract the assistant's response from the API response
-        const assistantResponse = responseData.result.data_array[0][0];
-        setAiResponse(assistantResponse);
-      } catch (error) {
+        if (typeof responseData.body === 'string') {
+          try {
+            const parsedBody = JSON.parse(responseData.body);
+            setAiResponse(parsedBody.result.response);
+          } catch (parseError) {
+            console.error('Error parsing response body:', parseError);
+            setAiResponse(responseData.body);
+          }
+        } else {
+          setAiResponse(responseData.result?.response || responseData.body);
+        }
+      } catch (error: unknown) {
         console.error('Error in fetching AI response:', error);
-        setError('Failed to fetch AI response. Please try again later.');
+        if (error instanceof Error) {
+          setError(`Failed to fetch AI response: ${error.message}`);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setIsLoading(false);
       }
     }
   };
-  
-
-  const cards = [
-    {
-      id: '1',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            House in the woods
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            A serene and tranquil retreat, this house in the woods offers a peaceful
-            escape from the hustle and bustle of city life.
-          </p>
-        </div>
-      ),
-      className: "md:col-span-2",
-      thumbnail:
-        "https://images.unsplash.com/photo-1476231682828-37e571bc172f?q=80&w=3474&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: '2',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            House above the clouds
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            Perched high above the world, this house offers breathtaking views and a
-            unique living experience. It&apos;s a place where the sky meets home,
-            and tranquility is a way of life.
-          </p>
-        </div>
-      ),
-      className: "col-span-1",
-      thumbnail:
-        "https://images.unsplash.com/photo-1464457312035-3d7d0e0c058e?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: '3',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            Greens all over
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            A house surrounded by greenery and nature&apos;s beauty. It&apos;s the
-            perfect place to relax, unwind, and enjoy life.
-          </p>
-        </div>
-      ),
-      className: "col-span-1",
-      thumbnail:
-        "https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: '4',
-      content: (
-        <div>
-          <p className="font-bold md:text-4xl text-xl text-white">
-            Rivers are serene
-          </p>
-          <p className="font-normal text-base text-white"></p>
-          <p className="font-normal text-base my-4 max-w-lg text-neutral-200">
-            A house by the river is a place of peace and tranquility. It&apos;s the
-            perfect place to relax, unwind, and enjoy life.
-          </p>
-        </div>
-      ),
-      className: "md:col-span-2",
-      thumbnail:
-        "https://images.unsplash.com/photo-1475070929565-c985b496cb9f?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-  ];
   
 
   return (
@@ -243,7 +166,7 @@ function StepflowFctaWeb() {
           onChange={() => setShowJsonView(!showJsonView)}
         />
       </div>
-  
+
       {showJsonView ? (
         // JSON View
         <div className="flex flex-row space-x-4 overflow-x-auto">
@@ -273,10 +196,10 @@ function StepflowFctaWeb() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-auto">
           {showFinalJSON ? (
             // Final JSON and AI Response Display
-            <div className="w-full flex flex-col items-center justify-center">
+            <div className="w-full flex flex-col items-center justify-center overflow-auto">
               <div className="flex space-x-4 w-full">
                 <div className="flex space-x-4 w-full">
                   <PlaneTicket loading={isLoading} aiResponse={aiResponse} />
@@ -291,7 +214,7 @@ function StepflowFctaWeb() {
                   setUserSelections({ vibes: [], season: [], accommodation: [], activities: [] });
                   setAiResponse(null);
                   setError(null);
-                  setRequestsLog({databricks: '', llama: '', response: ''}); // Clear requests log
+                  setRequestsLog({ databricks: '', llama: '', response: '' }); // Clear requests log
                 }}
               >
                 Start Over
@@ -299,11 +222,11 @@ function StepflowFctaWeb() {
             </div>
           ) : (
             <>
-              <div className="flex w-full h-full items-center justify-center">
-                {/* Left side - Swiper */}
+              <div className="flex w-full items-center justify-center">
+                {/* Left side - Swiper or LayoutGrid */}
                 <div className="w-1/2 pr-4">
                   <div className="border-1 rounded-xl p-6 h-full w-full flex flex-col">
-                    {currentKeywords.length > 0 && (
+                    {currentKeywords.length > 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center">
                         <div className="w-full h-1/2 max-w-xl">
                           <TinderSwiper
@@ -313,15 +236,19 @@ function StepflowFctaWeb() {
                           />
                         </div>
                       </div>
+                    ) : (
+                      <div className="h-screen py-20 w-full">
+                        <LayoutGrid cards={cards} currentStepKey={currentStepKey} />
+                      </div>
                     )}
                   </div>
                 </div>
-  
+
                 <div className="inline-block h-full w-0.5 self-stretch bg-neutral-100 opacity-100"></div>
-  
+
                 {/* Right side - Questions */}
                 <div className="w-1/2 pl-4">
-                  <div className="border-2 border-gray-200 rounded-xl p-6 h-full flex flex-col justify-center items-center text-center">
+                  <div className="border-2 border-gray-200 rounded-xl p-6 h-full flex flex-col justify-center items-center text-center overflow-auto">
                     <Stepper currentStep={currentStep} totalSteps={totalSteps} />
                     <div className="mt-8 w-full flex flex-col items-center">
                       <CurrentStepComponent
@@ -356,3 +283,26 @@ function StepflowFctaWeb() {
 }
 
 export default StepflowFctaWeb;
+
+const cards = [
+  {
+    id: 1,
+    content: <div>Content for card 1</div>,
+    className: 'md:col-span-2',
+  },
+  {
+    id: 2,
+    content: <div>Content for card 2</div>,
+    className: 'col-span-1',
+  },
+  {
+    id: 3,
+    content: <div>Content for card 3</div>,
+    className: 'col-span-1',
+  },
+  {
+    id: 4,
+    content: <div>Content for card 4</div>,
+    className: 'md:col-span-2',
+  },
+];

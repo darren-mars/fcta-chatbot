@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userSelections),  // <-- Directly sending userSelections
+        body: JSON.stringify(userSelections),
       }
     );
 
