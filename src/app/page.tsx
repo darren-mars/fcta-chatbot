@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useMediaQuery } from 'react-responsive';
-import StepflowFctaWeb from './pages/page-web';
-import StepflowFctaMobile from './pages/page-mobile';
+import ResponsiveStepflow from './pages/page-web';
 
 export default function LandingPage() {
-  const isMobile = useMediaQuery({ maxWidth: 767 });
   const [isClient, setIsClient] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showFlow, setShowFlow] = useState(false);
@@ -27,7 +24,7 @@ export default function LandingPage() {
   }
 
   if (showFlow) {
-    return isMobile ? <StepflowFctaMobile /> : <StepflowFctaWeb />;
+    return <ResponsiveStepflow />;
   }
 
   return (

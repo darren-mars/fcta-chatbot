@@ -22,7 +22,7 @@ function StepflowFctaWeb() {
     activities: [],
   });
   const [currentKeywords, setCurrentKeywords] = useState<string[]>([]);
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [aiResponse, setAiResponse] = useState<{ itinerary?: string; package?: string } | null>(null);
   const [showFinalJSON, setShowFinalJSON] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [requestsLog, setRequestsLog] = useState<{ databricks: string; llama: string; response: string }>({
@@ -133,13 +133,15 @@ function StepflowFctaWeb() {
         if (typeof responseData.body === 'string') {
           try {
             const parsedBody = JSON.parse(responseData.body);
-            setAiResponse(parsedBody.result.response);
+            setAiResponse({ itinerary: parsedBody.result.response });
           } catch (parseError) {
             console.error('Error parsing response body:', parseError);
-            setAiResponse(responseData.body);
+            setAiResponse({ itinerary: responseData.body });
           }
         } else {
-          setAiResponse(responseData.result?.response || responseData.body);
+          setAiResponse({ 
+            itinerary: responseData.result?.response || responseData.body 
+          });
         }
       } catch (error: unknown) {
         console.error('Error in fetching AI response:', error);
